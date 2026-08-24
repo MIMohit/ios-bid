@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: iosbid-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iosbid
+      POSTGRES_PASSWORD: iosbid
+      POSTGRES_DB: iosbid
+    ports:
+      - "5433:5432"
+    volumes:
+      - iosbid-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iosbid -d iosbid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  iosbid-pgdata:
