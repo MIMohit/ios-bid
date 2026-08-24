@@ -1,0 +1,95 @@
+// iosbid.lol — the pay-to-rank leaderboard for iOS apps.
+// Rank is the bid, nothing else.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// One App Store app on the board. Keyed by Apple's trackId so two
+/// listings can never share a bid, and re-submitting the same app
+/// raises the existing listing instead of creating a duplicate.
+model Listing {
+  id             String   @id @default(cuid())
+  appId          String   @unique
+  bundleId       String?
+  slug           String   @unique
+  name           String
+  subtitle       String?
+  description    String?
+  iconUrl        String
+  developer      String
+  developerUrl   String?
+  price          Float    @default(0)
+  formattedPrice String?
+  rating         Float?
+  ratingCount    Int      @default(0)
+  contentRating  String?
+  minimumOs      String?
+  version        String?
+  genre          String
+  categorySlug   String
+  screenshots    String[]
+  url            String
+
+  /// Displayed bid, in whole US dollars. Sum of every settled payment.
+  totalBid   Int      @default(0)
+  clicks     Int      @default(0)
+  firstBidAt DateTime @default(now())
+  lastBidAt  DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  bids Bid[]
+
+  @@index([totalBid(sort: Desc), firstBidAt(sort: Asc)])
+  @@index([categorySlug, totalBid(sort: Desc)])
+}
+
+/// A single payment. `amount` is what was actually charged — for a raise
+/// that is only the difference above the listing's current bid.
+model Bid {
+  id            String    @id @default(cuid())
+  listingId     String?
+  listing       Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  appId         String
+  amount        Int
+  totalAfter    Int       @default(0)
+  status        BidStatus @default(PENDING)
+  checkoutId    String?   @unique
+  paymentIntent String?
+  /// App Store metadata captured when checkout opened, so the webhook can
+  /// create the listing without a second round trip to Apple.
+  snapshot      Json?
+  createdAt     DateTime  @default(now())
+  paidAt        DateTime?
+
+  @@index([appId])
+  @@index([status, paidAt(sort: Desc)])
+  @@index([paidAt(sort: Desc)])
+}
+
+enum BidStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+/// Rolling presence for the "N online" counter.
+model Presence {
+  sessionId String   @id
+  lastSeen  DateTime @default(now())
+
+  @@index([lastSeen])
+}
+
+/// Singleton counters (row id is always 1).
+model SiteStat {
+  id            Int      @id @default(1)
+  totalVisitors Int      @default(0)
+  launchedAt    DateTime @default(now())
+}
