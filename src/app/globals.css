@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e4e7ef;
+  --border-strong: #d3d8e4;
+  --text: #0a0d14;
+  --muted: #69718a;
+  --faint: #98a0b5;
+  --accent: #0a84ff;
+  --accent-2: #5e5ce6;
+  --accent-soft: rgba(10, 132, 255, 0.09);
+  --gold: #f0a020;
+  --gold-soft: rgba(240, 160, 32, 0.11);
+  --green: #16a34a;
+  --shadow: 0 1px 2px rgba(10, 13, 20, 0.04), 0 8px 24px -12px rgba(10, 13, 20, 0.12);
+}
+
+.dark {
+  --bg: #08090d;
+  --surface: #101219;
+  --surface-2: #161a24;
+  --border: #212633;
+  --border-strong: #2d3444;
+  --text: #eef1f7;
+  --muted: #8b93a8;
+  --faint: #656d82;
+  --accent: #3d9bff;
+  --accent-2: #7d7bf0;
+  --accent-soft: rgba(61, 155, 255, 0.13);
+  --gold: #ffc53d;
+  --gold-soft: rgba(255, 197, 61, 0.12);
+  --green: #34d399;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-green: var(--green);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+  --shadow-card: var(--shadow);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Apple-style continuous corner approximation for app icons. */
+.squircle {
+  border-radius: 22.37%;
+  overflow: hidden;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Frosted header. */
+.frost {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.35s ease-out both; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee { animation: marquee 44s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+
+/* Hide number input spinners — we ship our own steppers. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
