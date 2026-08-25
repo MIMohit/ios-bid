@@ -86,7 +86,10 @@ These live on the deployment, not in any file. Set them with `npx convex env set
 | `EDGE_SECRET` | Guards the two write `httpAction` endpoints. Same value as the Vercel one |
 
 Convex injects `CONVEX_CLOUD_URL` and `CONVEX_SITE_URL` into the function runtime itself. Do not
-hardcode either.
+hardcode either. Note the asymmetry: **inside** a Convex function the site URL is
+`process.env.CONVEX_SITE_URL`; **outside** it, on the Vercel server or in the browser bundle, it is
+`VITE_CONVEX_SITE_URL`, which is what the CLI writes into `.env.local`. Code that posts to
+`/track/click` or `/track/beat` from the Vercel side reads the `VITE_` name.
 
 ### The Stripe webhook
 
