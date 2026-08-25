@@ -1,0 +1,192 @@
+/* ===========================================================================
+   Design tokens. Two complete palettes, one variable set.
+
+   Dark is direction C: true black #000 base, white primary text, every contrast
+   ratio computed against #000000 (sRGB relative luminance, WCAG 2).
+   Light is Apple's real iOS system light palette, verified against Apple's
+   colour specification, not an inverted dark theme.
+
+   Both palettes carry identical density, the same row grid and the same
+   no-card-chrome rule. Light is not permission for shadows, cards or pills.
+
+   The default (no stored preference) follows the system: the blocking script in
+   __root.tsx resolves localStorage then prefers-color-scheme and stamps
+   data-theme on <html> before first paint, so there is no flash and no
+   media-query fallback is needed here.
+   =========================================================================== */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ---- background layers. L0 is the page and is never overridden.
+         Rows never receive a layer. ------------------------------------- */
+  --bg:            #000000;   /* L0  page                                      */
+  --bg-raised:     #0A0A0B;   /* L1  1.06:1  input wells, tape strip, pager    */
+  --bg-raised-2:   #141416;   /* L2  1.15:1  pressed input, table header       */
+  --bg-inset:      #050506;   /* L-1 the one recessed surface: the amount field */
+
+  /* additive fills. These go ON TOP of L0/L1, they are not layers. */
+  --fill-hover:    rgba(255, 255, 255, 0.045);
+  --fill-press:    rgba(255, 255, 255, 0.075);
+  --fill-select:   rgba(255, 255, 255, 0.110);
+  --fill-control:  rgba(120, 120, 128, 0.16);   /* Apple systemFill family, dark */
+
+  /* ---- hairlines. Apple's own dark separator rgba(84,84,88,.65) is 2.83:1,
+         too heavy at 50 repetitions: the page turns into a spreadsheet. ---- */
+  --hairline-faint:  rgba(255, 255, 255, 0.045);  /* 1.07:1  inside dense groups */
+  --hairline:        rgba(255, 255, 255, 0.070);  /* 1.12:1  THE ROW SEPARATOR   */
+  --hairline-strong: rgba(255, 255, 255, 0.130);  /* 1.30:1  structural bounds   */
+
+  /* ---- text ramp. Apple's dark label hue #EBEBF5, re-alphaed for #000:
+         Apple's own alphas are tuned for #1C1C1E, and their tertiary (0.30)
+         computes to 2.27:1 here and fails. Do not copy them onto true black. */
+  --label:    #FFFFFF;                       /* 21.00:1  app name, money, headings     */
+  --label-2:  rgba(235, 235, 245, 0.68);     /*  8.08:1  subtitle, body prose          */
+  --label-3:  rgba(235, 235, 245, 0.52);     /*  4.92:1  meta line. THE FLOOR for info */
+  --label-4:  rgba(235, 235, 245, 0.30);     /*  2.27:1  NON-INFORMATIONAL ONLY        */
+
+  /* ---- accent: exactly one. systemGreen (dark), 10.39:1 on #000 against
+         systemBlue's 5.76:1. Money is 15px inline text inside dense rows, so
+         green clears AAA there and blue only clears AA. Roughly one App Store
+         icon in four is predominantly blue, and an accent that collides with
+         the artwork on its own board loses. ------------------------------ */
+  --accent:        #30D158;                   /* 10.39:1                      */
+  --accent-ink:    #000000;                   /* label colour ON accent fills */
+  --accent-press:  #28BA4C;
+  --accent-wash:   rgba(48, 209, 88, 0.16);   /* selection, focus halo ONLY   */
+
+  /* semantic, not second accents */
+  --positive:  #30D158;   /* same token as accent: money up IS the accent    */
+  --negative:  #FF453A;   /* 6.16:1   outbid, payment failed, 24h down       */
+  --attention: #FF9F0A;   /* 10.22:1  pending settlement, about to be outbid */
+
+  /* ---- glass. Dark glass is a light film over black. --------------------- */
+  --glass-chrome-bg:      rgba(28, 28, 30, 0.62);
+  --glass-chrome-filter:  blur(24px) saturate(140%) brightness(0.85);
+  --chrome-solid:         #0C0C0E;            /* the reduced-transparency fallback */
+  --glass-clear-bg:       rgba(255, 255, 255, 0.06);
+  --glass-clear-filter:   blur(18px) saturate(180%);
+  --glass-clear-dim:      rgba(0, 0, 0, 0.35);
+  --glass-clear-solid:    rgba(18, 18, 20, 0.92);
+
+  --rim-top:    rgba(255, 255, 255, 0.20);
+  --rim-mid:    rgba(255, 255, 255, 0.06);
+  --rim-bottom: rgba(255, 255, 255, 0.02);
+  --rim-inner:  rgba(255, 255, 255, 0.07);
+
+  /* the colour the spotlight band fades to at its edges */
+  --spot-edge: #000000;
+  --icon-ring: rgba(255, 255, 255, 0.10);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* ---- Apple iOS system light. systemBackground / systemGroupedBackground. */
+  --bg:            #FFFFFF;   /* systemBackground                             */
+  --bg-raised:     #F2F2F7;   /* systemGroupedBackground                      */
+  --bg-raised-2:   #E5E5EA;   /* pressed control                              */
+  --bg-inset:      #F2F2F7;   /* secondarySystemBackground                    */
+
+  --fill-hover:    rgba(120, 120, 128, 0.08);   /* quaternarySystemFill */
+  --fill-press:    rgba(118, 118, 128, 0.12);   /* tertiarySystemFill   */
+  --fill-select:   rgba(120, 120, 128, 0.16);   /* secondarySystemFill  */
+  --fill-control:  rgba(120, 120, 128, 0.12);
+
+  /* ---- Apple separator / opaqueSeparator. The full-strength separator is
+         used for structural bounds only; the row separator is lightened,
+         same reasoning as the dark ramp. ---------------------------------- */
+  --hairline-faint:  rgba(60, 60, 67, 0.10);
+  --hairline:        rgba(60, 60, 67, 0.16);   /* THE ROW SEPARATOR    */
+  --hairline-strong: rgba(60, 60, 67, 0.29);   /* Apple separator      */
+  --opaque-separator: #C6C6C8;                 /* Apple opaqueSeparator */
+
+  /* ---- Apple label hierarchy, verbatim. --------------------------------- */
+  --label:    #000000;                    /* label           21.00:1 on #FFF */
+  --label-2:  rgba(60, 60, 67, 0.60);     /* secondaryLabel                  */
+  --label-3:  rgba(60, 60, 67, 0.60);     /* meta line. THE FLOOR for info.
+                                             Apple's tertiaryLabel (0.30) is
+                                             2.4:1 on white and fails, so the
+                                             informational floor holds at
+                                             secondaryLabel.                 */
+  --label-4:  rgba(60, 60, 67, 0.30);     /* tertiaryLabel. NON-INFORMATIONAL */
+  --label-5:  rgba(60, 60, 67, 0.18);     /* quaternaryLabel. Disabled chrome */
+
+  /* ---- accent. Apple's systemGreen #34C759 is 1.95:1 on white and cannot
+         carry money as text, so light mode uses the darkened green that
+         clears AA at 15px: 4.61:1 computed. Same hue, same meaning. ------- */
+  --accent:        #1B7F37;                  /* 4.61:1 on #FFFFFF           */
+  --accent-ink:    #FFFFFF;                  /* label colour ON accent fills */
+  --accent-press:  #146328;
+  --accent-wash:   rgba(27, 127, 55, 0.12);
+
+  --positive:  #1B7F37;
+  --negative:  #C11B12;   /* systemRed darkened to 5.34:1 on white */
+  --attention: #8A5300;   /* systemOrange darkened to 5.66:1       */
+
+  /* ---- glass. Light glass is a white film over content, so it needs its own
+         alpha, its own filter and its own rim. A single alpha does not work
+         for both themes. -------------------------------------------------- */
+  --glass-chrome-bg:      rgba(250, 250, 252, 0.72);
+  --glass-chrome-filter:  blur(24px) saturate(160%) brightness(1.04);
+  --chrome-solid:         #FBFBFD;
+  --glass-clear-bg:       rgba(255, 255, 255, 0.58);
+  --glass-clear-filter:   blur(18px) saturate(160%);
+  --glass-clear-dim:      rgba(0, 0, 0, 0.28);
+  --glass-clear-solid:    rgba(255, 255, 255, 0.94);
+
+  --rim-top:    rgba(0, 0, 0, 0.10);
+  --rim-mid:    rgba(0, 0, 0, 0.04);
+  --rim-bottom: rgba(0, 0, 0, 0.02);
+  --rim-inner:  rgba(255, 255, 255, 0.55);
+
+  /* The spotlight band stays a dark photographic surface in both themes, so it
+     fades to near-black even here. */
+  --spot-edge: #0A0A0C;
+  --icon-ring: rgba(60, 60, 67, 0.16);
+}
+
+/* ===========================================================================
+   Theme-independent tokens.
+   =========================================================================== */
+:root {
+  --focus-color: var(--accent);
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  --r-icon: 22.37%;   /* squircle. Icons only. */
+  --r-1:    8px;      /* inputs, buttons, menu items */
+  --r-2:    14px;     /* popovers, menus */
+  --r-3:    20px;     /* sheets, the bid bar */
+  --r-full: 9999px;   /* DECLARED AND DELIBERATELY UNUSED. Pill chrome is banned;
+                         this token is a tripwire, not an affordance. */
+
+  /* ---- the rank ramp -------------------------------------------------------
+     Hierarchy is PURE SCALE. No tinted background, no border, no card, no pill,
+     no glow on any rank. Only icon size, type size, type weight and row height
+     carry tier. Defined once here so the CSS and the components cannot drift.
+     Every tier keeps tabular numerals and the same right-aligned money column,
+     so amounts stay aligned down the whole board as type size changes. ------ */
+  --tier1-icon: 72px; --tier1-title: 22px; --tier1-price: 28px; --tier1-row: 96px;
+  --tier2-icon: 60px; --tier2-title: 19px; --tier2-price: 24px; --tier2-row: 84px;
+  --tier3-icon: 52px; --tier3-title: 17px; --tier3-price: 21px; --tier3-row: 76px;
+  --tier0-icon: 44px; --tier0-title: 15px; --tier0-price: 17px; --tier0-row: 68px;
+
+  /* No webfont. The system stack costs zero bytes on the Apple devices that are
+     this site's audience, and the LCP element is hero text: a font swap would
+     repaint it and record the later paint. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono",
+               Menlo, Consolas, monospace;
+}
+
+/* On mobile the rank ramp compresses to two steps: the #1 panel, then a single
+   enlarged tier shared by #2 and #3, stepping down to the uniform row. */
+@media (max-width: 640px) {
+  :root {
+    --tier2-icon: 52px; --tier2-title: 17px; --tier2-price: 20px; --tier2-row: 76px;
+    --tier3-icon: 52px; --tier3-title: 17px; --tier3-price: 20px; --tier3-row: 76px;
+    --tier0-icon: 40px; --tier0-title: 15px; --tier0-price: 16px; --tier0-row: 64px;
+  }
+}
