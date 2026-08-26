@@ -23,10 +23,11 @@
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-router-ssr-query": "1.167.1",
     "@tanstack/react-start": "1.168.49",
-    "@vercel/og": "1.0.2",
     "convex": "1.45.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "satori": "0.33.3",
+    "sharp": "0.35.3",
     "stripe": "22.5.0",
     "zod": "4.4.3"
   },

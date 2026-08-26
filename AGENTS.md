@@ -2,7 +2,7 @@
 
 A pay-to-rank public leaderboard of iOS App Store apps. Rank is the bid, nothing else.
 
-The build contract is `scratchpad/research/00-ADR.md` plus `OWNER-DECISIONS.md`. This file covers
+The build contract and the owner decisions behind it live outside the repo. This file covers
 only what you need to run the thing.
 
 ## Stack
@@ -114,12 +114,8 @@ Vercel environment variables: `CONVEX_DEPLOY_KEY` (a separate key for production
 `EDGE_SECRET`, and `VITE_DATAFAST_ID` on production only. Never set `VITE_CONVEX_URL` by hand; the
 build writes it, and setting it manually is how a preview ends up writing to production data.
 
-## Known state during the rewrite
+## Known quirks
 
-- `/` returns 404 until W6 lands `src/routes/index.tsx`. The shell, the 404 page and the error
-  boundary all render correctly in the meantime.
-- `public/` does not exist yet (W7 owns it), so `/favicon.ico`, `/icon-512.png` and
-  `/apple-touch-icon.png` 404.
 - `patches/@tanstack__router-ssr-query-core@1.169.1.patch` fixes an upstream bug: the client
   hydration reader calls `hydrate(queryClient, value)` before checking `done`, so the terminal read
   always passes `undefined` and logs `Error reading query stream` on every page load. Two-line

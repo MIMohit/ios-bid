@@ -22,6 +22,10 @@ export default defineConfig({
       // none of that.
     }),
     viteReact(),
-    nitro(),
+    // harfbuzzjs is CommonJS and finds hb.wasm through `__dirname`. Bundled
+    // into an ESM chunk, as nitro does with dependencies by default, both break.
+    // Keep it external so Node loads it as CommonJS, and full-trace it (`*`) so
+    // hb.wasm lands in .output/server/node_modules next to it.
+    nitro({ traceDeps: ["harfbuzzjs*"] }),
   ],
 });
