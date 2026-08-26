@@ -2,6 +2,7 @@
 
 @import "./tokens.css";
 @import "./glass.css";
+@import "./chrome.css";
 @import "./board.css";
 
 /* ===========================================================================
@@ -10,9 +11,13 @@
    =========================================================================== */
 
 html {
+  /* Drives SF's real optical size axis on Apple hardware, which is where this
+     site's audience is. Everywhere else the per-token tracking in board.css is
+     the optical sizing. */
   font-optical-sizing: auto;
   -webkit-text-size-adjust: 100%;
   background: var(--bg);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -48,4 +53,34 @@ p { margin: 0; }
   max-width: 1200px;
   margin-inline: auto;
   padding-inline: clamp(16px, 3vw, 28px);
+}
+
+/* Every live number on the page is tabular so digits do not reflow as they tick,
+   and the money column stays aligned across four different type sizes. Applied
+   as a class where an element opts out of a parent's numeric setting. */
+.money-t {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  white-space: nowrap;
+}
+
+/* ===========================================================================
+   Reduced motion.
+
+   There is no ambient motion on this site to switch off: no keyframes runs
+   without a user gesture, and there are no spinners, shimmers or pulses. What
+   remains is press and hover feedback, which is kept: a press with no
+   acknowledgement is a broken button, not an accessible one.
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    transition-property: opacity, background-color, color !important;
+  }
+  html { scroll-behavior: auto; }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }

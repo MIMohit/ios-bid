@@ -1,0 +1,404 @@
+/* ===========================================================================
+   Chrome, bid bar, and the page furniture below the board.
+
+   board.css owns the board and the spotlight band; glass.css owns the two
+   blurred materials. This file owns what sits around them: the header's
+   contents, the stats strip, the bid bar's controls, the revenue line, the
+   testimonial wall and the footer.
+
+   Nothing here may name backdrop-filter. The budget is two selectors and both
+   are spent in glass.css.
+   =========================================================================== */
+
+/* ---- wordmark ------------------------------------------------------------ */
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+.wordmark svg { display: block; }
+
+/* ---- the All-time / Today switch -----------------------------------------
+   Real links, not tabs: /today is a crawlable URL with its own title and its
+   own canonical, so a JavaScript tab control would hide half the site from
+   both search engines and the back button. */
+.seg {
+  display: flex;
+  background: var(--fill-control);
+  border-radius: var(--r-1);
+  padding: 2px;
+  gap: 2px;
+}
+.seg a {
+  font-size: 12.5px;
+  font-weight: 590;
+  letter-spacing: -0.008em;
+  padding: 4px 11px;
+  border-radius: 6px;
+  color: var(--label-2);
+  white-space: nowrap;
+  transition: color 120ms cubic-bezier(0.2, 0, 0, 1),
+              background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.seg a[aria-current="page"] {
+  background: var(--bg-raised-2);
+  color: var(--label);
+}
+.seg .dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--label-4);
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+.seg a[aria-current="page"] .dot { background: var(--accent); }
+
+/* ---- nav and the theme toggle -------------------------------------------- */
+.chrome nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.chrome nav a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-2);
+  letter-spacing: -0.006em;
+  transition: color 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.chrome nav a:hover { color: var(--label); }
+
+.theme-btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  color: var(--label-2);
+  flex: none;
+}
+.theme-btn:hover { background: var(--fill-hover); color: var(--label); }
+
+/* Both icons are always in the markup and CSS picks one, so the button needs
+   no state, no effect and no hydration guard: whatever data-theme the blocking
+   script stamped is already showing the right glyph on the first paint.
+   Mirrors the three-block resolution order in tokens.css. */
+.theme-sun { display: none; }
+:root[data-theme="dark"] .theme-sun  { display: block; }
+:root[data-theme="dark"] .theme-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-sun  { display: block; }
+  :root:not([data-theme="light"]) .theme-moon { display: none; }
+}
+
+/* ---- stats strip ---------------------------------------------------------
+   Fixed height whether or not the numbers have arrived, so the board below it
+   never moves when the first live push lands. */
+.stats {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+  border-bottom: 1px solid var(--hairline-faint);
+}
+.stats b { color: var(--label); font-weight: 600; }
+.stats a { color: var(--label-2); }
+.stats a:hover { color: var(--label); }
+.stats span + span::before {
+  content: "\00b7";
+  margin: 0 8px;
+  color: var(--label-4);
+}
+.stats .live {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 6px;
+}
+
+/* ---- the bid bar's contents ----------------------------------------------
+   The bar itself (material, rim, shadow) is .bidbar in glass.css and .bidwrap
+   in board.css. Everything below is the controls inside it. The bar floats
+   over the photographic band, so its text is pinned white in both themes for
+   the same reason .spotlight pins its own ramp. */
+.bidbar {
+  padding: 20px 22px 22px;
+  --label:   #FFFFFF;
+  --label-2: rgba(235, 235, 245, 0.68);
+  --label-3: rgba(235, 235, 245, 0.52);
+  --accent:     #30D158;
+  --accent-ink: #000000;
+  --accent-press: #28BA4C;
+  --rim-top:    rgba(255, 255, 255, 0.20);
+  --rim-mid:    rgba(255, 255, 255, 0.06);
+  --rim-bottom: rgba(255, 255, 255, 0.02);
+  color: var(--label);
+}
+
+/* A board with no rank 1 above it (page 2, an empty category) has nothing to
+   overhang, so the bar sits on the page instead of over the band. */
+.bidwrap.is-flat { margin-top: 24px; }
+.bidwrap.is-flat .bidbar { box-shadow: none; }
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.hero-label { font-size: 24px; font-weight: 600; letter-spacing: -0.028em; }
+
+.stepper { display: flex; align-items: center; gap: 10px; }
+.step {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-1);
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--label);
+  flex: none;
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.step:hover  { background: rgba(255, 255, 255, 0.18); }
+.step:active { background: rgba(255, 255, 255, 0.24); }
+.step[disabled] { color: var(--label-3); cursor: default; }
+.step[disabled]:hover { background: rgba(255, 255, 255, 0.10); }
+
+/* Typed, not only stepped: the rules say the bidder names any whole dollar
+   amount, so this is an input that happens to look like a headline. */
+.hero-amount {
+  font-size: clamp(34px, 4.2vw, 44px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.034em;
+  color: var(--accent);
+  width: 8ch;
+  text-align: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+}
+.hero-amount:focus { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+
+.hero-rule {
+  margin: 10px auto 0;
+  text-align: center;
+  max-width: 62ch;
+  font-size: 12px;
+  line-height: 17px;
+  letter-spacing: -0.004em;
+  color: var(--label-2);
+}
+.hero-rule b { color: var(--label); font-weight: 600; }
+
+.bidform {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px 108px;
+  gap: 8px;
+  margin-top: 16px;
+}
+.field {
+  height: 44px;
+  border-radius: var(--r-1);
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--label);
+  padding-inline: 13px;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: -0.010em;
+  width: 100%;
+}
+.field::placeholder { color: rgba(235, 235, 245, 0.46); }
+.field:focus { border-color: rgba(255, 255, 255, 0.30); }
+.field[disabled] { color: var(--label-2); cursor: default; }
+select.field {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 32px;
+}
+select.field option { background: var(--popover-solid); color: var(--label); }
+
+.outbid {
+  height: 44px;
+  border-radius: var(--r-1);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.outbid:hover { background: var(--accent-press); }
+.outbid[disabled] { background: rgba(255, 255, 255, 0.14); color: var(--label-2); cursor: default; }
+
+/* ---- lookup results ------------------------------------------------------
+   A static block under the form, not a floating popover: it appears only
+   because the visitor typed, it needs no outside-click handler, no focus trap
+   and no positioning, and the bar is the last thing on the band so growing
+   downward moves nothing that was being read. */
+.bid-note {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 17px;
+  letter-spacing: -0.004em;
+  color: var(--label-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 17px;
+}
+.bid-note b { color: var(--label); font-weight: 600; }
+.bid-note .money-t { color: var(--accent); font-weight: 600; }
+.bid-note.is-error { color: #FF9F0A; }
+
+.bid-picks {
+  margin-top: 10px;
+  border-radius: var(--r-2);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.bid-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.bid-pick:last-child { border-bottom: 0; }
+.bid-pick:hover { background: rgba(255, 255, 255, 0.08); }
+.bid-pick .icon { --icon-size: 28px; }
+.bid-pick span {
+  font-size: 13px;
+  letter-spacing: -0.006em;
+  color: var(--label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bid-pick i {
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.008em;
+  color: var(--label-2);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ---- connection state ----------------------------------------------------
+   One line, and only once the socket has been up and has since dropped. No
+   spinner and no retry button: the client is already retrying, so a button
+   that does what the client does anyway is theatre. */
+.conn {
+  text-align: center;
+  padding-block: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.008em;
+  color: var(--attention);
+  border-bottom: 1px solid var(--hairline-faint);
+}
+
+/* ---- revenue counter ----------------------------------------------------- */
+.revenue {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  color: var(--label-3);
+}
+.revenue b { color: var(--accent); font-weight: 600; }
+
+/* ---- testimonial wall ----------------------------------------------------
+   A 1px grid gap over a hairline background is the whole separator system:
+   four quotes, no cards, no borders drawn twice. */
+.wall {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--hairline-strong);
+}
+.wall h2 { margin: 0 0 20px; font-size: 24px; font-weight: 600; letter-spacing: -0.028em; }
+.wall-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hairline);
+  border-block: 1px solid var(--hairline);
+}
+.quote { margin: 0; background: var(--bg); padding: 22px 24px 20px; }
+.quote blockquote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  letter-spacing: -0.014em;
+  color: var(--label);
+  max-width: 46ch;
+}
+.quote figcaption {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.008em;
+  color: var(--label-2);
+}
+.quote figcaption span { display: block; font-weight: 500; color: var(--label-3); margin-top: 2px; }
+
+/* ---- footer -------------------------------------------------------------- */
+.foot {
+  margin-top: 56px;
+  border-top: 1px solid var(--hairline);
+  padding-block: 22px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+}
+.foot nav { display: flex; }
+.foot nav a { color: var(--label-3); }
+.foot nav a:hover { color: var(--label); }
+.foot nav a + a::before { content: "\00b7"; margin: 0 8px; color: var(--label-4); }
+
+/* ---- responsive ---------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .bidform { grid-template-columns: minmax(0, 1fr) 180px 104px; }
+  .wall-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .chrome nav a { display: none; }
+  .chrome-in { gap: 12px; }
+  .seg a { padding: 4px 9px; }
+  .bidform { grid-template-columns: minmax(0, 1fr); }
+  .wall-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero-label { font-size: 20px; }
+}
+@media (max-width: 640px) {
+  .stats { font-size: 10.5px; }
+  .stat-visitors { display: none; }
+}
