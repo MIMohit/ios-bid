@@ -21,6 +21,7 @@ import type * as maintenance from "../maintenance.js";
 import type * as presence from "../presence.js";
 import type * as receipt from "../receipt.js";
 import type * as rules from "../rules.js";
+import type * as seed from "../seed.js";
 import type * as seo from "../seo.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   receipt: typeof receipt;
   rules: typeof rules;
+  seed: typeof seed;
   seo: typeof seo;
   stats: typeof stats;
   stripe: typeof stripe;

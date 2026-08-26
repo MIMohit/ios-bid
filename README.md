@@ -5,7 +5,9 @@ A public leaderboard for iOS App Store apps where rank is the bid and nothing el
 Every listing is a real app pulled live from Apple's iTunes Lookup API, so there is no submission
 form, no editorial process and no fake rows. Pay more than the app above you and you move above it.
 
-> Screenshots below run against seeded development data. The numbers are arbitrary.
+> Screenshots below run against seeded development data. Every number in them is
+> randomly generated, including the bids, the tap counts and the visitor totals.
+> See [seeding](#seeding) to reproduce them.
 
 ![The all-time board](docs/screenshots/board-dark.png)
 
@@ -94,6 +96,26 @@ pnpm test
 pnpm build
 ./scripts/check-seo.sh http://localhost:3000
 ```
+
+## Seeding
+
+An empty board is hard to look at, so `convex/seed.ts` fills a development
+deployment with plausible traffic: outbound taps that decay with rank, bid times
+spread across the last nine days, presence rows and a visitor total.
+
+```bash
+npx convex run seed:traffic '{"confirm":"yes-seed-this-deployment"}'
+npx convex run seed:clearTraffic '{"confirm":"yes-seed-this-deployment"}'
+```
+
+It writes nothing a real visitor could not have: taps land in the same sharded
+counter `/go/:slug` uses, and the money ledger is never touched, so `totalBid`,
+`boardStats` and `siteStat.revenue` stay whatever really settled. The
+confirmation string is deliberate. It is an internal mutation, so it is not
+reachable from the browser.
+
+Listings themselves come from real bids. To put apps on the board, run a bid
+through `bids:createPending` and `bids:settle`, or pay through Stripe test mode.
 
 ## Notes on the SEO surface
 
