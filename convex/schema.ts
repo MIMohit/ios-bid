@@ -81,12 +81,17 @@ export default defineSchema({
     totalAfter: v.number(),         // the listing's totalBid after this payment, for the ticker
     status: bidStatus,              // pending -> paid | failed. "paid" is the idempotency latch
     checkoutId: v.optional(v.string()),    // Stripe session id. How /success finds this bid
-    paymentIntent: v.optional(v.string()), // Stripe pi_, for refund and support lookups
+    paymentIntent: v.optional(v.string()), // Stripe pi_, and how a refund or dispute finds this bid
+    country: v.optional(v.string()),       // ISO 3166-1 alpha-2 billing country. The VAT filing record
     snapshot: appMeta,              // Apple metadata frozen at checkout, typed, never v.any()
     paidAt: v.optional(v.number()), // ms epoch the webhook settled it. Drives the 24h window
     expired: v.optional(v.boolean()),      // true once this payment has aged out of the today board
+    reversed: v.optional(v.boolean()),     // true once refunded or charged back. `bids.reverse` latch
   })
     .index("by_checkoutId", ["checkoutId"])              // /success lookup by session_id
+    // A refund and a dispute both arrive as PaymentIntent-shaped events carrying
+    // no metadata of ours, so the ledger resolves them by this and nothing else.
+    .index("by_paymentIntent", ["paymentIntent"])
     .index("by_status_paidAt", ["status", "paidAt"])     // activity ticker + daily revenue rollup
     .index("by_listing_paidAt", ["listingId", "paidAt"]) // oldest still-live payment, for today ties
     .index("by_status_creation", ["status"]),            // sweep abandoned pending bids by _creationTime
