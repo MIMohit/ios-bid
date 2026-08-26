@@ -42,7 +42,17 @@ export function ago(at: Timestamp): string {
   return `${Math.floor(months / 12)}y ago`;
 }
 
-/** "6 days", "3 hours". How long the current holder has held the slot. */
+/**
+ * "6 days", "3 hours". How long the current holder has held the slot.
+ *
+ * Reads the clock at render, so the server's string and the client's differ
+ * whenever hydration lands on the other side of a minute. That is guaranteed
+ * rather than unlikely: the board is served with `s-maxage=15,
+ * stale-while-revalidate=300`, so most visitors hydrate HTML that is minutes
+ * old. Every element rendering this or `hoursSince` therefore carries
+ * `suppressHydrationWarning`, which keeps the server's text instead of throwing
+ * the whole board away and re-rendering it on the client.
+ */
 export function held(since: Timestamp): string {
   const seconds = Math.max(1, Math.floor((Date.now() - toMs(since)) / 1000));
   if (seconds < 3600) {

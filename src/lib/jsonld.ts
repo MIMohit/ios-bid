@@ -25,15 +25,12 @@ export const ORGANIZATION = {
     "iosbid.lol runs a public leaderboard of iOS App Store apps ranked only by how much was paid for the position. Every listing is a paid placement.",
   foundingDate: "2026-08",
   slogan: "Rank is the bid.",
-  contactPoint: [
-    {
-      "@type": "ContactPoint",
-      contactType: "customer support",
-      email: "hello@iosbid.lol",
-      availableLanguage: "English",
-    },
-  ],
-  sameAs: ["https://x.com/iosbidlol"],
+  // No `contactPoint` and no `sameAs`. Both were here, asserting
+  // hello@iosbid.lol and https://x.com/iosbidlol on every page, and neither the
+  // mailbox nor the handle has been verified to exist. A support address that
+  // bounces is a false claim in markup on a site that takes money with no
+  // accounts, and a sameAs pointing at nothing is a dead entity link. Restore
+  // both the day the mailbox accepts mail and the handle is registered.
 } as const;
 
 export const WEBSITE = {
