@@ -14,4 +14,7 @@ src/routeTree.gen.ts
 .nitro
 .vercel
 .vite
-.env*
+.next
+src/generated
+next-env.d.ts
+
