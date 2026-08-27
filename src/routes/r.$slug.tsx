@@ -92,12 +92,11 @@ function Receipt() {
   // row's claim button writes to, so there is one path into the form, and it
   // clears on the way out so the board's bar is not left holding this number.
   const price = receipt?.row.priceToTake ?? null;
-  const rank = receipt?.row.rank ?? null;
   useEffect(() => {
-    if (price === null || rank === null) return;
-    setBidAmount(price, rank);
+    if (price === null) return;
+    setBidAmount(price);
     return clearBidAmount;
-  }, [price, rank]);
+  }, [price]);
 
   // The loader already threw notFound() on null. This is the live subscription
   // catching up if the listing goes away while somebody is looking at it.

@@ -25,13 +25,20 @@ const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
  *
  * Every rejection is a `ConvexError` with a `data` payload, because plain
  * `Error` messages are scrubbed in production and the bid form has to render
- * the reason inline. Non-integers and anything under $1 die here, at the trust
- * boundary, not only in the UI: this query is callable by anyone holding the
+ * the reason inline. Non-integers and anything under MIN_BID die here, at the
+ * trust boundary, not only in the UI: this query is callable by anyone holding the
  * deployment URL and `stripe.createCheckout` prices off its answer.
  */
 async function quoteBid(ctx: QueryCtx, appId: string, amount: number) {
-  if (!Number.isInteger(amount) || amount < 1) {
+  if (!Number.isInteger(amount)) {
     throw new ConvexError({ code: "not_integer", message: "Bids are whole US dollars." });
+  }
+  if (amount < MIN_BID) {
+    throw new ConvexError({
+      code: "below_min",
+      message: `Bids start at ${usd(MIN_BID)}.`,
+      minimum: MIN_BID,
+    });
   }
   if (amount > MAX_BID) {
     throw new ConvexError({ code: "too_large", message: `The maximum bid is ${usd(MAX_BID)}.` });
@@ -42,16 +49,7 @@ async function quoteBid(ctx: QueryCtx, appId: string, amount: number) {
     .withIndex("by_appId", (q) => q.eq("appId", appId))
     .unique();
 
-  if (!listing) {
-    if (amount < MIN_BID) {
-      throw new ConvexError({
-        code: "below_min",
-        message: `New listings start at ${usd(MIN_BID)}.`,
-        minimum: MIN_BID,
-      });
-    }
-    return { newTotal: amount, charge: amount, isRaise: false, currentBid: 0 };
-  }
+  if (!listing) return { newTotal: amount, charge: amount, isRaise: false, currentBid: 0 };
 
   const current = listing.totalBid;
   const floor = current + RAISE_STEP;

@@ -1,18 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useAction, useConvex } from "convex/react";
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
 import { ConvexError } from "convex/values";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { api } from "@convex/_generated/api";
 import { MIN_BID } from "@convex/rules";
 import { money } from "~/lib/format";
 import { icon, iconSrcSet } from "~/lib/icon";
-import { BID_FORM_ID, BID_INPUT_ID, setBidAmount, useBidPrefill } from "~/lib/bid-store";
+import { BID_FORM_ID, BID_INPUT_ID, setBidAmount, useBidAmount } from "~/lib/bid-store";
 import { AmountStepper } from "./AmountStepper";
 
 /** Apple metadata, derived from the action rather than restated here. */
 type Lookup = FunctionReturnType<typeof api.appstore.lookup>;
 type AppMatch = Extract<Lookup, { match: unknown }>["match"];
 type Quote = FunctionReturnType<typeof api.bids.quote>;
+type BoardWindow = FunctionArgs<typeof api.board.place>["window"];
 
 /**
  * Every user-facing rejection on this deployment is a ConvexError carrying
@@ -33,6 +36,9 @@ type Props = {
    * It is the amount shown until a row's claim button names a different one.
    */
   priceForTop: number;
+  /** Which board the place in the heading is counted inside. */
+  window?: BoardWindow;
+  categorySlug?: string;
   /**
    * True where there is no spotlight band above the bar to overhang: page 2, a
    * category board with no listings, the /rules page.
@@ -52,13 +58,38 @@ type Props = {
  * charged comes from the same function that priced this quote and the two
  * cannot disagree.
  */
-export function BidBar({ priceForTop, flat = false }: Props) {
+export function BidBar({
+  priceForTop,
+  window: board = "all",
+  categorySlug,
+  flat = false,
+}: Props) {
   const convex = useConvex();
   const lookup = useAction(api.appstore.lookup);
   const checkout = useAction(api.stripe.createCheckout);
 
-  const prefill = useBidPrefill();
-  const amount = prefill.amount ?? priceForTop;
+  const asked = useBidAmount();
+  const amount = asked ?? priceForTop;
+
+  // What this amount actually buys. The heading names it and the steppers walk
+  // it, so dialling under the rounded #1 price is a legible move rather than a
+  // number that quietly stops meaning #1.
+  //
+  // `asked`, not `amount`: until the visitor names a figure this is the same
+  // null the route loader prefetched with, so the first paint already has a
+  // ladder instead of fetching one after hydration.
+  const place = useQuery({
+    ...convexQuery(api.board.place, { window: board, categorySlug, amount: asked }),
+    // Keep the last ladder while the next one loads. The rung for the amount you
+    // just left is the rung for the amount you are on, and an undefined ladder
+    // turns a rung press into a plain dollar step.
+    placeholderData: (previous) => previous,
+  }).data;
+
+  // Until the board answers, the amount on screen is the rounded #1 price,
+  // which is #1 by construction. A place too deep for the board to name stays
+  // unnamed rather than guessed at.
+  const rank = place === undefined ? (amount >= priceForTop ? 1 : null) : place.rank;
 
   const [text, setText] = useState("");
   const [app, setApp] = useState<AppMatch | null>(null);
@@ -153,9 +184,9 @@ export function BidBar({ priceForTop, flat = false }: Props) {
       <form className="bidbar rim" id={BID_FORM_ID} onSubmit={submit}>
         <div className="hero">
           <span className="hero-label">
-            Claim {prefill.rank === null ? "#1" : `#${prefill.rank}`} for
+            {rank === null ? "Claim a rank for" : `Claim #${rank} for`}
           </span>
-          <AmountStepper value={amount} onChange={(next) => setBidAmount(next, prefill.rank)} />
+          <AmountStepper value={amount} ladder={place} onChange={setBidAmount} />
         </div>
 
         <p className="hero-rule">

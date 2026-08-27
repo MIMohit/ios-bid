@@ -52,8 +52,8 @@ test("a receipt states the board's own rank, tiebreak included", async () => {
   t.registerComponent("shardedCounter", counterSchema, counterModules);
 
   await t.run(async (ctx) => {
-    await ctx.db.insert("listings", listing("older", 100, 1, "productivity"));
-    await ctx.db.insert("listings", listing("newer", 100, 2, "games"));
+    await ctx.db.insert("listings", listing("older", 102, 1, "productivity"));
+    await ctx.db.insert("listings", listing("newer", 102, 2, "games"));
     await ctx.db.insert("listings", listing("cheaper", 50, 3, "productivity"));
     await ctx.db.insert("listings", listing("unpaid", 0, 0, "games"));
   });
@@ -65,8 +65,9 @@ test("a receipt states the board's own rank, tiebreak included", async () => {
   expect((await receipt("newer"))?.row.rank).toBe(2);
   expect((await receipt("cheaper"))?.row.rank).toBe(3);
 
-  // Taking #1 costs the top bid plus $5, any other rank costs that rank plus $1,
-  // priced against the GLOBAL top rather than against whatever is above you.
+  // Taking #1 costs the next round $5 above the top bid, $102 -> $105. Any other
+  // rank costs that rank plus $1, priced against the GLOBAL top rather than
+  // against whatever is above you.
   expect((await receipt("older"))?.row.priceToTake).toBe(105);
   expect((await receipt("cheaper"))?.row.priceToTake).toBe(51);
   expect((await receipt("cheaper"))?.priceForTop).toBe(105);

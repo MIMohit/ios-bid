@@ -28,7 +28,7 @@ const FAQ = [
   },
   {
     q: "What does it cost to take a rank?",
-    a: `Taking #1 costs at least ${money(TOP_STEP)} more than the current top bid. Taking any other rank costs at least ${money(RAISE_STEP)} more than the bid sitting on it. Every row on the board shows its own price, and pressing it fills that exact amount into the form.`,
+    a: `Anything above the current top bid takes #1. The heading rounds that figure up to the next ${money(TOP_STEP)} so it reads as a round number, and the minus control walks it back down to the cheapest amount that still holds the spot. Taking any other rank costs at least ${money(RAISE_STEP)} more than the bid sitting on it, and pressing a row fills that exact amount into the form.`,
   },
   {
     q: "What if I pay less than the price of #1?",
@@ -89,7 +89,7 @@ export const Route = createFileRoute("/rules")({
   head: () =>
     pageHead({
       title: "Rules · iosrank.lol",
-      description: `How ranking works on iosrank.lol. Whole dollars, ${money(MIN_BID)} minimum, #1 costs top bid plus ${money(TOP_STEP)}, any other rank costs that rank plus ${money(RAISE_STEP)}. Paying less is never an error.`,
+      description: `How ranking works on iosrank.lol. Whole dollars, ${money(MIN_BID)} minimum, #1 costs a dollar over the top bid and is advertised rounded up to the next ${money(TOP_STEP)}, any other rank costs that rank plus ${money(RAISE_STEP)}. Paying less is never an error.`,
       canonical: absolute("/rules"),
       jsonld: [
         faqPage(FAQ),

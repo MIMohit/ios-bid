@@ -42,6 +42,11 @@ export const Route = createFileRoute("/today")({
       ),
       context.queryClient.ensureQueryData(convexQuery(api.categories.totals, {})),
       context.queryClient.ensureQueryData(convexQuery(api.stats.strip, {})),
+      // The bid bar opens on the rounded price of #1. Warming the ladder under
+      // it here is what makes the first press of a stepper land on a rung.
+      context.queryClient.ensureQueryData(
+        convexQuery(api.board.place, { window: "today", amount: null }),
+      ),
       context.queryClient.ensureQueryData(convexQuery(api.bids.recentActivity, {})),
       context.queryClient.ensureQueryData(convexQuery(api.board.podium, { window: "all" })),
     ]);
@@ -129,10 +134,10 @@ function Today() {
       <main>
         {top ? (
           <SpotlightPanel row={top} clicks={clicks[top.id] ?? 0}>
-            <BidBar priceForTop={board.priceForTop} />
+            <BidBar priceForTop={board.priceForTop} window="today" />
           </SpotlightPanel>
         ) : (
-          <BidBar priceForTop={board.priceForTop} flat />
+          <BidBar priceForTop={board.priceForTop} window="today" flat />
         )}
 
         <div className="page shell">

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { MIN_BID } from "@convex/rules";
 import { gotoWithTheme } from "./helpers";
 
 /**
@@ -26,25 +27,32 @@ test.describe("the amount control", () => {
     expect(value, `the amount is not whole dollars: ${value}`).toMatch(NO_DECIMAL);
   });
 
-  test("the steppers move the amount and the step grows with it", async ({ page }) => {
+  test("plus steps in dollars above #1, minus trims to the cheapest #1", async ({ page }) => {
     await gotoWithTheme(page, "/", "dark");
     const amount = page.locator(".hero-amount");
+    const label = page.locator(".hero-label");
     const dollars = async () => Number((await amount.inputValue()).replace(/[^\d]/g, ""));
 
+    // The bar opens on the rounded price of #1. Nothing outranks #1, so there is
+    // no rung above it and plus falls back to the dollar step, which scales
+    // because +$1 on a $17,000 bid is a control that does nothing.
+    await expect(label).toContainText("#1");
     const before = await dollars();
     await page.locator(".step").nth(1).click();
-    const up = await dollars();
-    expect(up).toBeGreaterThan(before);
-
-    // +$1 on a $17,000 bid is a control that does nothing, so the step scales.
-    const step = up - before;
+    const step = (await dollars()) - before;
     if (before >= 10_000) expect(step).toBe(100);
     else if (before >= 1_000) expect(step).toBe(25);
     else if (before >= 100) expect(step).toBe(5);
     else expect(step).toBe(1);
 
+    // Minus walks the board's own ladder instead: a rounded $17,005 lands on the
+    // $17,001 that still holds the spot, so it never overshoots the price it
+    // started from and never leaves #1 in one press.
     await page.locator(".step").nth(0).click();
-    expect(await dollars()).toBe(before);
+    const trimmed = await dollars();
+    expect(trimmed, "minus overshot the price it opened at").toBeLessThanOrEqual(before);
+    expect(trimmed).toBeGreaterThanOrEqual(MIN_BID);
+    await expect(label).toContainText("#1");
   });
 
   test("a decimal point cannot be entered at all", async ({ page }) => {
@@ -67,7 +75,7 @@ test.describe("the amount control", () => {
     await amount.blur();
     const value = await amount.inputValue();
     expect(value).toMatch(NO_DECIMAL);
-    expect(Number(value.replace(/[^\d]/g, ""))).toBeGreaterThanOrEqual(5);
+    expect(Number(value.replace(/[^\d]/g, ""))).toBeGreaterThanOrEqual(MIN_BID);
   });
 
   test("the minus stepper stops at the floor instead of going negative", async ({ page }) => {
@@ -81,7 +89,7 @@ test.describe("the amount control", () => {
       await minus.click();
     }
     const value = Number((await amount.inputValue()).replace(/[^\d]/g, ""));
-    expect(value, "the amount went under the minimum bid").toBeGreaterThanOrEqual(5);
+    expect(value, "the amount went under the minimum bid").toBeGreaterThanOrEqual(MIN_BID);
   });
 });
 

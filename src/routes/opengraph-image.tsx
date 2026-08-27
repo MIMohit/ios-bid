@@ -3,6 +3,7 @@ import satori from "satori";
 import sharp from "sharp";
 import geist from "~/assets/Geist-Regular.ttf?inline";
 import { boardPricing, convexServer } from "~/lib/convex-server";
+import { MIN_BID } from "@convex/rules";
 import { money } from "~/lib/format";
 
 // satori and sharp directly, not @vercel/og. og@1.0.2 publishes its Node build
@@ -123,7 +124,7 @@ export const Route = createFileRoute("/opengraph-image")({
                     Nobody has bid yet.
                   </div>
                   <div style={{ display: "flex", fontSize: 116, color: ACCENT, letterSpacing: "-0.038em" }}>
-                    $5 takes #1.
+                    {`${money(MIN_BID)} takes #1.`}
                   </div>
                 </div>
               )}

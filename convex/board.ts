@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { MAX_PAGE, MIN_BID, PAGE_SIZE, TOP_STEP, priceToTake } from "./rules";
+import { MAX_PAGE, MIN_BID, PAGE_SIZE, RAISE_STEP, priceForTop, priceToTake } from "./rules";
 
 const windowArg = v.union(v.literal("all"), v.literal("today"));
 type BoardWindow = "all" | "today";
@@ -97,8 +97,8 @@ export const page = query({
     const upto = page * PAGE_SIZE;
 
     // The GLOBAL top for this window, not the category's. A category board's
-    // rank 1 is usually not the global #1, and only beating the global #1 costs
-    // the +$5 step.
+    // rank 1 is usually not the global #1, and only beating the global #1 buys
+    // the rounded #1 price.
     const top = await boardScan(ctx, args.window, null).order("desc").first();
     const topBid = top ? (args.window === "today" ? top.todayBid : top.totalBid) : 0;
 
@@ -123,7 +123,7 @@ export const page = query({
       pageSize: PAGE_SIZE,
       pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
       topBid,
-      priceForTop: Math.max(MIN_BID, topBid + TOP_STEP),
+      priceForTop: priceForTop(topBid),
     };
   },
 });
@@ -136,9 +136,99 @@ export const pricing = query({
     const topBid = top ? (window === "today" ? top.todayBid : top.totalBid) : 0;
     return {
       topBid,
-      priceForTop: Math.max(MIN_BID, topBid + TOP_STEP),
+      priceForTop: priceForTop(topBid),
       topName: top?.name ?? null,
       topIconUrl: top?.iconUrl ?? null,
+    };
+  },
+});
+
+/**
+ * How deep a place the amount control will name. Past this the place is reported
+ * as unknown rather than read for.
+ */
+const PLACE_PROBE = 200;
+
+/**
+ * Where an amount lands on the board right now, plus the rungs on either side of
+ * it. This is what makes the amount control a ladder instead of a dollar nudge:
+ * minus walks down to the cheapest amount that still holds the place, then to
+ * the cheapest amount that holds the next place down.
+ *
+ * Counted inside whichever board is on screen, because the rows beside the
+ * heading are that board's. The figure is not: the price of #1 is global on
+ * every board, so a category page names a category place at a global price.
+ *
+ * A null amount means "whatever the heading opens at", resolved here rather than
+ * by the caller so a route loader can prefetch this alongside the board page
+ * instead of waiting on it for the figure. That keeps the key the bid bar asks
+ * for on its first render identical to the one the loader warmed, which is what
+ * puts a rung under the first press of the minus control.
+ *
+ * ponytail: two documents answer the common case, since the amount on screen
+ * starts above the top bid. Only dialling below it pays the PLACE_PROBE scan.
+ * Swap that scan for @convex-dev/aggregate's offset lookup if deep places ever
+ * need naming.
+ */
+export const place = query({
+  args: {
+    window: windowArg,
+    categorySlug: v.optional(v.string()),
+    amount: v.union(v.number(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const { window, amount: asked } = args;
+    const categorySlug =
+      args.categorySlug && args.categorySlug !== "all" ? args.categorySlug : null;
+    const bidOf = (l: Doc<"listings">) => (window === "today" ? l.todayBid : l.totalBid);
+    const scan = async (limit: number) => {
+      const listings = await boardScan(ctx, window, categorySlug).order("desc").take(limit);
+      return listings.map(bidOf);
+    };
+
+    let limit = 2;
+    let bids = await scan(limit);
+    // One more document on a category board, and only when the caller asked for
+    // the opening figure: that price is the global one even here.
+    const globalTop = async () => {
+      if (categorySlug === null) return bids[0] ?? 0;
+      const top = await boardScan(ctx, window, null).order("desc").first();
+      return top ? bidOf(top) : 0;
+    };
+    const amount = asked ?? priceForTop(await globalTop());
+    if (bids.length === limit && (bids[0] ?? 0) >= amount) {
+      limit = PLACE_PROBE + 2;
+      bids = await scan(limit);
+    }
+    // A short read is the whole board. A full one may be hiding more below it,
+    // and every "there is nothing cheaper" answer here turns on that.
+    const truncated = bids.length === limit;
+
+    // A tie loses: the older bid holds the place, so ahead of me is bid >= amount.
+    const ahead = bids.filter((bid) => bid >= amount).length;
+    const dearestAhead = bids[ahead - 1];
+    const dearestBehind = bids[ahead];
+    // Equal bids are one rung, not two: nothing can slot between them.
+    const under =
+      dearestBehind === undefined
+        ? undefined
+        : bids.slice(ahead).find((bid) => bid < dearestBehind);
+
+    // The cheapest amount that beats `bid`. With no bid to beat the board has
+    // bottomed out and MIN_BID is enough, unless the read stopped short, in
+    // which case what is down there is simply not known.
+    const rung = (bid: number | undefined) =>
+      bid !== undefined ? bid + RAISE_STEP : truncated ? null : MIN_BID;
+
+    return {
+      /** The place this amount buys, null when the board runs deeper than the probe. */
+      rank: dearestBehind !== undefined || !truncated ? ahead + 1 : null,
+      /** The cheapest amount that still holds that place. */
+      floor: rung(dearestBehind),
+      /** The cheapest amount that holds the next place down, null at the bottom. */
+      cheaper: dearestBehind === undefined ? null : rung(under),
+      /** The cheapest amount that holds the next place up, null at #1. */
+      dearer: dearestAhead === undefined ? null : dearestAhead + RAISE_STEP,
     };
   },
 });
