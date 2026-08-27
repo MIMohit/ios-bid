@@ -120,6 +120,20 @@ export const createCheckout = action({
       billing_address_collection: "required",
       automatic_tax: { enabled: true },
       tax_id_collection: { enabled: true },
+      // Managed Payments is on by default on this account, and it is Stripe
+      // acting as merchant of record: it would carry the VAT liability for us.
+      // We cannot use it. Its eligibility list covers digital goods and
+      // excludes "professional services, such as consulting, marketing,
+      // design, development", and a paid placement on a leaderboard is
+      // advertising. TAX_CODE below is the honest code for what we sell and it
+      // is not on the eligible list, so the session is rejected outright unless
+      // we opt out here.
+      //
+      // Relabelling this as SaaS to qualify would work until Stripe reviewed
+      // the account, at which point they hand back the tax liability for every
+      // sale already made. A merchant of record that actually takes advertising
+      // (Polar, Paddle) is the real fix if that liability matters.
+      managed_payments: { enabled: false },
       line_items: [
         {
           quantity: 1,
