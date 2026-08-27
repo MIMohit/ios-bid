@@ -13,6 +13,15 @@ import { absolute, pageHead } from "~/lib/seo";
 /** The window the table covers. Long enough to show a trend, short enough to read. */
 const DAYS = 30;
 
+/**
+ * The public PostHog dashboard. A share token, not a secret: it grants read
+ * access to this one dashboard and nothing else, which is the whole point of
+ * publishing it. Revoking is a toggle in PostHog, not a redeploy here.
+ */
+const TRAFFIC_TOKEN = "ZtjOkb-GIbHUyxVr_U-5xz4D-HNzKw";
+const TRAFFIC_DASHBOARD = `https://us.posthog.com/shared/${TRAFFIC_TOKEN}`;
+const TRAFFIC_EMBED = `https://us.posthog.com/embedded/${TRAFFIC_TOKEN}`;
+
 export const Route = createFileRoute("/stats")({
   loader: async ({ context }) => {
     const [stats, daily] = await Promise.all([
@@ -134,6 +143,37 @@ function Stats() {
             ))}
           </tbody>
         </table>
+
+        {/*
+          Traffic, straight from PostHog's public dashboard. The numbers above
+          are ours and are the ones that matter to a bidder: taps, bids, what
+          settled. This is the other half, where the visitors came from, and it
+          is published for the same reason the bid figures are. A board that
+          sells attention should show its own.
+
+          loading="lazy" because it sits below the tables and must not compete
+          with them for the first paint. The sandbox is PostHog's own: scripts
+          to render the charts, same-origin to reach its API, popups so a chart
+          can open its full view. No allow-forms and no allow-top-navigation, so
+          the frame cannot post anything or move the page out from under us.
+        */}
+        <section className="doc wide">
+          <h2>Traffic</h2>
+          <p>
+            Where visitors come from, published live.{" "}
+            <a href={TRAFFIC_DASHBOARD} target="_blank" rel="noopener noreferrer">
+              Open the full dashboard
+            </a>
+            .
+          </p>
+          <iframe
+            className="embed"
+            title="iosrank.lol traffic dashboard"
+            src={TRAFFIC_EMBED}
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+          />
+        </section>
 
         <Footer />
       </main>
