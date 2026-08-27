@@ -18,6 +18,17 @@ const REVEAL_MS = 520;
 const REVEAL_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 /**
+ * The theme a transition is on its way to, while one is in flight.
+ *
+ * `startViewTransition` calls its callback asynchronously, so two presses inside
+ * one frame both read a `data-theme` that has not changed yet, both resolve to
+ * the same value, and the second press is a silent no-op. Remembering what is
+ * already committed is what makes a double press land where a double press
+ * should. Cleared once the attribute agrees with it.
+ */
+let pending: Theme | null = null;
+
+/**
  * Flip the theme, revealing the new one with a circle grown from `origin`.
  *
  * `<html data-theme>` is the single source of truth: the blocking script above
@@ -42,10 +53,13 @@ const REVEAL_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
  */
 export function toggleTheme(origin: DOMRect | null): void {
   const root = document.documentElement;
-  const next: Theme = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+  const current = pending ?? (root.getAttribute("data-theme") === "light" ? "light" : "dark");
+  const next: Theme = current === "light" ? "dark" : "light";
+  pending = next;
 
   const apply = () => {
     root.setAttribute("data-theme", next);
+    if (pending === next) pending = null;
     // Private browsing and blocked storage both throw here. The theme still
     // applies for this page view, it just does not persist.
     try {

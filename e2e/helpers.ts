@@ -40,6 +40,11 @@ function luminance(rgb: readonly [number, number, number]): number {
 }
 
 function parseRgb(value: string): [number, number, number, number] {
+  const hex = value.trim().match(/^#([0-9a-f]{6})$/i);
+  if (hex) {
+    const n = parseInt(hex[1]!, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255, 1];
+  }
   const parts = value.match(/[\d.]+/g);
   if (!parts || parts.length < 3) throw new Error(`unparseable colour: ${value}`);
   return [Number(parts[0]), Number(parts[1]), Number(parts[2]), parts[3] ? Number(parts[3]) : 1];
@@ -71,6 +76,16 @@ export async function contrastOf(locator: Locator): Promise<number> {
     const stack: string[] = [];
     let node: Element | null = el;
     while (node) {
+      // The spotlight band is painted by absolutely positioned SIBLINGS
+      // (.spot-bg, .spot-dim, .spot-fade), not by an ancestor's background, so
+      // walking up would sail straight past it and land on the page, which is
+      // white in light mode. The band's own floor is --spot-edge and the design
+      // guarantees the band never goes lighter than it where text sits, so that
+      // is the honest base for anything inside it.
+      if (node.classList.contains("spotlight")) {
+        stack.push(getComputedStyle(node).getPropertyValue("--spot-edge").trim() || "#000000");
+        break;
+      }
       const cs = getComputedStyle(node);
       const bg = cs.backgroundColor;
       const image = cs.backgroundImage;

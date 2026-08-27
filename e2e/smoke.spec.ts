@@ -16,7 +16,7 @@ const ROUTES = [
   { path: "/today", heading: /Today's ranking/ },
   { path: "/category/productivity", heading: /Productivity leaderboard/ },
   { path: "/category/productivity/today", heading: /Productivity today/ },
-  { path: "/categories", heading: /Categories/ },
+  { path: "/categories", heading: /Every App Store category/ },
   { path: "/stats", heading: /Live stats/ },
   { path: "/about", heading: /About/ },
   { path: "/rules", heading: /.+/ },
@@ -31,7 +31,12 @@ for (const theme of ["dark", "light"] as const) {
 
       await gotoWithTheme(page, route.path, theme);
       await expect(page.getByRole("heading").first()).toBeVisible();
-      await expect(page.getByRole("heading", { level: 1 }).first()).toHaveText(route.heading);
+
+      // Named, not level-pinned. On a board with a rank 1 the <h1> is the
+      // spotlit app and the board's own heading is an <h2>, because the board is
+      // not the page. Every page still has exactly one h1.
+      await expect(page.getByRole("heading", { name: route.heading }).first()).toBeVisible();
+      expect(await page.getByRole("heading", { level: 1 }).count(), "not exactly one h1").toBe(1);
 
       await expectNoHorizontalOverflow(page);
 

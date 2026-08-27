@@ -58,13 +58,29 @@ test("the homepage carries exactly three JSON-LD blocks", async ({ page }) => {
   expect(parsed.some((n) => n["@type"] === "ItemList"), "no ItemList on the board").toBe(true);
 });
 
-test("robots.txt allows the board and points at the sitemap", async ({ request }) => {
+test("robots.txt refuses everything unless this is production", async ({ request }) => {
+  // A Vercel preview deploy gets a real public URL and would be indexed if it
+  // served the production file, so robots.txt is generated per environment.
+  // Locally and on every preview the only correct answer is a blanket refusal,
+  // and asserting the production text here would assert the dangerous one.
   const response = await request.get("/robots.txt");
   expect(response.status()).toBe(200);
   const body = await response.text();
-  expect(body).toMatch(/sitemap:/i);
-  // /go/ is a redirect hop, never a destination.
-  expect(body).toMatch(/disallow:\s*\/go\//i);
+
+  if (process.env.VERCEL_ENV === "production") {
+    expect(body).toMatch(/sitemap:/i);
+    // A per-agent block REPLACES the wildcard block for that agent rather than
+    // merging with it, so every block has to repeat the Disallows.
+    const blocks = body.split(/\n(?=User-agent:)/).filter((b) => /^User-agent: (?!Bytespider)/.test(b));
+    expect(blocks.length).toBeGreaterThan(1);
+    for (const block of blocks) {
+      expect(block, `a crawler block leaves /go/ open:\n${block}`).toMatch(/disallow:\s*\/go\//i);
+    }
+  } else {
+    expect(body).toMatch(/user-agent:\s*\*/i);
+    expect(body, "a non-production build is inviting crawlers").toMatch(/disallow:\s*\/\s*$/im);
+    expect(body).not.toMatch(/sitemap:/i);
+  }
 });
 
 test("the sitemap is valid XML and lists the boards", async ({ request }) => {
@@ -75,9 +91,20 @@ test("the sitemap is valid XML and lists the boards", async ({ request }) => {
   const body = await response.text();
   expect(body).toContain("<urlset");
   expect(body).toContain("https://iosrank.lol/");
-  expect(body).toContain("https://iosrank.lol/today");
   const urls = body.match(/<loc>/g)?.length ?? 0;
   expect(urls).toBeGreaterThan(28);
+
+  // /today is submitted only while it has content. An empty Today board serves
+  // noindex, and a sitemap that points at a noindex page is a Search Console
+  // warning we asked for. So the assertion is the RULE, not the presence.
+  const today = await request.get("/today");
+  const hasRows = /class="row/.test(await today.text());
+  expect(
+    body.includes("<loc>https://iosrank.lol/today</loc>"),
+    hasRows
+      ? "the Today board has listings but is missing from the sitemap"
+      : "the Today board is empty but is being submitted anyway",
+  ).toBe(hasRows);
 });
 
 test("the social preview image renders", async ({ request }) => {

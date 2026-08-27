@@ -73,7 +73,15 @@ export function Board({
   return (
     <section id="board">
       <div className="board-head">
-        <h2>{heading}</h2>
+        {/*
+          h2 when the spotlight band is above, because the band's app name is
+          the page's h1 and the board is not the page. With no band there is no
+          other h1 anywhere on the route, and /today before the first settlement
+          shipped with none at all. The heading level follows the page, so every
+          board has exactly one h1 either way. board.css styles :is(h1, h2)
+          identically, so nothing moves.
+        */}
+        {spotlighted ? <h2>{heading}</h2> : <h1>{heading}</h1>}
         <p>{caption}</p>
       </div>
 

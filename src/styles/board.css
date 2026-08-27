@@ -988,7 +988,11 @@
 
   .today-grid { grid-template-columns: minmax(0, 1fr); }
   .today-card { min-height: 64px; }
-  .today-grid, .slab-empty { min-height: 0; }
+  /* One-up, so the grid's own floor goes: three stacked cards set the height.
+     The empty state keeps a floor, because reserving the block's height is the
+     entire reason it renders a sentence instead of collapsing. */
+  .today-grid { min-height: 0; }
+  .slab-empty { min-height: 44px; }
 
   .spot-shots { gap: 10px; }
   .shot, .shot img { width: 124px; }

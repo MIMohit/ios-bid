@@ -37,20 +37,30 @@ test("the toggle flips the theme, persists it, and reveals it with a circle from
     const button = document.querySelector<HTMLElement>(".theme-btn")!;
     const rect = button.getBoundingClientRect();
     button.click();
-    await new Promise((r) => setTimeout(r, 140));
+    await new Promise((r) => setTimeout(r, 90));
 
+    // The KEYFRAMES, not the live playState. Whether the animation is still
+    // running at some arbitrary sample point is a race with the clock and says
+    // nothing about the product; what it is animating, from where, and how far
+    // is the whole contract.
     const animation = document.documentElement
       .getAnimations({ subtree: true })
-      .find((a) => (a.effect as KeyframeEffect | undefined)?.pseudoElement === "::view-transition-new(root)");
-    const clip = animation
-      ? getComputedStyle(document.documentElement, "::view-transition-new(root)").clipPath
-      : "";
+      .find(
+        (a) =>
+          (a.effect as KeyframeEffect | undefined)?.pseudoElement ===
+          "::view-transition-new(root)",
+      );
+    const effect = animation?.effect as KeyframeEffect | undefined;
+    const frames = (effect?.getKeyframes() ?? []).map((f) => String(f.clipPath ?? ""));
+    const timing = effect?.getTiming();
 
     await new Promise((r) => setTimeout(r, 700));
     return {
-      clip,
-      running: animation?.playState ?? "none",
+      frames,
+      duration: typeof timing?.duration === "number" ? timing.duration : 0,
+      found: animation !== undefined,
       origin: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      viewport: { w: window.innerWidth, h: window.innerHeight },
       theme: document.documentElement.getAttribute("data-theme"),
       stored: localStorage.getItem("iosrank-theme"),
     };
@@ -58,15 +68,27 @@ test("the toggle flips the theme, persists it, and reveals it with a circle from
 
   expect(result.theme).toBe("light");
   expect(result.stored).toBe("light");
-  expect(result.running).toBe("running");
-  expect(result.clip, "the reveal is not a circle").toMatch(/^circle\(/);
+  expect(result.found, "no animation on ::view-transition-new(root)").toBe(true);
+  expect(result.duration, "the reveal is instant or endless").toBeGreaterThan(200);
 
-  // The circle starts at the button, not at a hardcoded corner. A rounded match
-  // rather than exact, because the clip is sampled mid-animation.
-  const at = result.clip.match(/at\s+([\d.]+)px\s+([\d.]+)px/);
-  expect(at, `no origin in clip-path: ${result.clip}`).not.toBeNull();
+  expect(result.frames.length, `unexpected keyframes: ${result.frames.join(" -> ")}`).toBe(2);
+  const [from, to] = result.frames;
+  expect(from, "the reveal does not start from nothing").toMatch(/^circle\(0px at /);
+  expect(to, "the reveal is not a circle").toMatch(/^circle\(/);
+
+  // It grows from the button, not from a hardcoded corner, and it reaches the
+  // furthest corner of the viewport so it always clears the screen.
+  const at = to!.match(/at\s+([\d.]+)px\s+([\d.]+)px/);
+  expect(at, `no origin in clip-path: ${to}`).not.toBeNull();
   expect(Math.abs(Number(at![1]) - result.origin.x)).toBeLessThan(2);
   expect(Math.abs(Number(at![2]) - result.origin.y)).toBeLessThan(2);
+
+  const radius = Number(to!.match(/circle\(([\d.]+)px/)![1]);
+  const needed = Math.hypot(
+    Math.max(result.origin.x, result.viewport.w - result.origin.x),
+    Math.max(result.origin.y, result.viewport.h - result.origin.y),
+  );
+  expect(radius, "the circle stops short of the viewport corner").toBeGreaterThanOrEqual(needed - 1);
 });
 
 test("a rapid double press lands on the right theme and throws nothing", async ({ page }) => {

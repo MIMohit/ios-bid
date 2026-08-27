@@ -27,7 +27,7 @@ test.describe("pagination", () => {
     // those URLs is a thin page.
     const response = await page.goto("/?page=9999");
     const notFound =
-      response?.status() === 404 || (await page.getByText(/not found/i).count()) > 0;
+      response?.status() === 404 || (await page.getByText(/nothing at this address/i).count()) > 0;
     expect(notFound, "a page past the end served a 200 board").toBe(true);
   });
 
@@ -71,7 +71,7 @@ test.describe("categories", () => {
     // URL and an unbounded thin-page generator.
     const response = await page.goto("/category/not-a-real-category");
     const notFound =
-      response?.status() === 404 || (await page.getByText(/not found/i).count()) > 0;
+      response?.status() === 404 || (await page.getByText(/nothing at this address/i).count()) > 0;
     expect(notFound).toBe(true);
   });
 
@@ -131,5 +131,6 @@ test("the receipt page states the rank and offers the same price the board does"
 test("an unknown route renders the not-found page rather than a blank screen", async ({ page }) => {
   const response = await page.goto("/definitely-not-a-route");
   expect(response?.status()).toBe(404);
-  await expect(page.locator("body")).toContainText(/not found/i);
+  await expect(page.locator("body")).toContainText(/Nothing at this address/i);
+  await expect(page.getByRole("link", { name: /Back to the leaderboard/i })).toBeVisible();
 });

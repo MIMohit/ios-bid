@@ -46,7 +46,15 @@ export default defineConfig({
 
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
-    { name: "mobile", use: { ...devices["iPhone 14"] } },
+    // Chromium at a phone viewport, not WebKit. What is being tested here is the
+    // responsive layout: the podium plates keep equal-and-opposite margins, the
+    // interlude goes one-up, the rail becomes a strip, and nothing scrolls
+    // sideways. None of that is engine specific, and pinning WebKit would make
+    // the gate depend on a second browser download for no extra coverage.
+    {
+      name: "mobile",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 393, height: 852 }, isMobile: false, hasTouch: true },
+    },
   ],
 
   webServer: {
