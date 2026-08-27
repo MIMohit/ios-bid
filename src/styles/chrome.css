@@ -98,28 +98,55 @@
 }
 
 /* ---- stats strip ---------------------------------------------------------
-   Fixed height whether or not the numbers have arrived, so the board below it
-   never moves when the first live push lands. */
+   The live line under the header. Fixed height whether or not the numbers have
+   arrived, so the board below it never moves when the first push lands.
+
+   The pill is the one full-radius surface on this site and --r-full's only use.
+   That token was declared as a tripwire against pill chrome, and this is the
+   deliberate exception rather than the ban quietly lapsing: the line is a
+   status readout with no neighbours, not a control, and a fill is what
+   separates it from the header rule directly above it. Nothing else reaches
+   for the token.
+
+   The full-width rule that used to sit under this line is gone with it. A rule
+   and a pill are two separators doing one job. */
 .stats {
-  height: 32px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  padding-inline: clamp(16px, 3vw, 28px);
+}
+.stats-pill {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  max-width: 100%;
+  padding-inline: 14px;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.008em;
   color: var(--label-3);
-  border-bottom: 1px solid var(--hairline-faint);
+  white-space: nowrap;
+  overflow: hidden;
 }
-.stats b { color: var(--label); font-weight: 600; }
-.stats a { color: var(--label-2); }
-.stats a:hover { color: var(--label); }
-.stats span + span::before {
+.stats-pill b { color: var(--label); font-weight: 600; }
+.stats-pill a { color: var(--label-2); }
+.stats-pill a:hover { color: var(--label); }
+/* Child combinator, not descendant: the online count is a nested span and a
+   descendant match puts a separator dot between the live dot and the number. */
+.stats-pill > span + span::before {
   content: "\00b7";
   margin: 0 8px;
   color: var(--label-4);
 }
-.stats .live {
+/* The dot and the count are the same signal, so they carry the same colour.
+   This is the one place the accent is not money: liveness is the other thing
+   this site sells, and the number is what proves it. */
+.stats-online { color: var(--accent); font-weight: 600; }
+.stats-pill .live {
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -129,12 +156,27 @@
 }
 
 /* ---- the bid bar's contents ----------------------------------------------
-   The bar itself (material, rim, shadow) is .bidbar in glass.css and .bidwrap
-   in board.css. Everything below is the controls inside it. The bar floats
-   over the photographic band, so its text is pinned white in both themes for
-   the same reason .spotlight pins its own ramp. */
+   The bar's material (surface, blur, dim, shadow) is .bidbar in glass.css and
+   .bidwrap in board.css. Everything below is the controls inside it.
+
+   The bar has two homes and they need different colour. Over the spotlight band
+   it floats on the #1 app's screenshots, which are a dark photographic surface
+   in BOTH themes, so its text is pinned white and its wells are dark holes cut
+   into the glass. With no rank 1 there is no band and the same bar renders flat
+   on the page, where pinned white is a grey slab with invisible labels. That
+   was the light theme bug, and it was equally wrong in dark, where a
+   black-on-black dim left the bar with no findable edge.
+
+   Everything the two homes disagree about is a token declared once per home, so
+   none of the rules below branch and the markup does not know which home it is
+   in. Adding a control means adding a token here, not a second rule. */
 .bidbar {
   padding: 20px 22px 22px;
+  color: var(--label);
+}
+
+/* Over the band. */
+.spotlight .bidbar {
   --label:   #FFFFFF;
   --label-2: rgba(235, 235, 245, 0.68);
   --label-3: rgba(235, 235, 245, 0.52);
@@ -144,13 +186,35 @@
   --rim-top:    rgba(255, 255, 255, 0.20);
   --rim-mid:    rgba(255, 255, 255, 0.06);
   --rim-bottom: rgba(255, 255, 255, 0.02);
-  color: var(--label);
+
+  --bid-well:        rgba(0, 0, 0, 0.42);
+  --bid-well-edge:   rgba(255, 255, 255, 0.14);
+  --bid-well-focus:  rgba(255, 255, 255, 0.30);
+  --bid-placeholder: rgba(235, 235, 245, 0.46);
+  --bid-step:        rgba(255, 255, 255, 0.10);
+  --bid-step-hover:  rgba(255, 255, 255, 0.18);
+  --bid-step-press:  rgba(255, 255, 255, 0.24);
+  --bid-inert:       rgba(255, 255, 255, 0.14);
+  --bid-hairline:    rgba(255, 255, 255, 0.08);
+}
+
+/* Flat on the page: the theme's own ramp, unpinned. --label and its family are
+   deliberately absent here so they resolve to :root and follow the theme. */
+.bidwrap.is-flat .bidbar {
+  --bid-well:        var(--bg);
+  --bid-well-edge:   var(--hairline-strong);
+  --bid-well-focus:  var(--label-3);
+  --bid-placeholder: var(--label-3);
+  --bid-step:        var(--fill-control);
+  --bid-step-hover:  var(--fill-select);
+  --bid-step-press:  var(--bg-raised-2);
+  --bid-inert:       var(--fill-control);
+  --bid-hairline:    var(--hairline);
 }
 
 /* A board with no rank 1 above it (page 2, an empty category) has nothing to
    overhang, so the bar sits on the page instead of over the band. */
 .bidwrap.is-flat { margin-top: 24px; }
-.bidwrap.is-flat .bidbar { box-shadow: none; }
 
 .hero {
   display: flex;
@@ -168,15 +232,15 @@
   border-radius: var(--r-1);
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.10);
+  background: var(--bid-step);
   color: var(--label);
   flex: none;
   transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
 }
-.step:hover  { background: rgba(255, 255, 255, 0.18); }
-.step:active { background: rgba(255, 255, 255, 0.24); }
+.step:hover  { background: var(--bid-step-hover); }
+.step:active { background: var(--bid-step-press); }
 .step[disabled] { color: var(--label-3); cursor: default; }
-.step[disabled]:hover { background: rgba(255, 255, 255, 0.10); }
+.step[disabled]:hover { background: var(--bid-step); }
 
 /* Typed, not only stepped: the rules say the bidder names any whole dollar
    amount, so this is an input that happens to look like a headline. */
@@ -215,8 +279,8 @@
 .field {
   height: 44px;
   border-radius: var(--r-1);
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--bid-well);
+  border: 1px solid var(--bid-well-edge);
   color: var(--label);
   padding-inline: 13px;
   font: inherit;
@@ -224,17 +288,9 @@
   letter-spacing: -0.010em;
   width: 100%;
 }
-.field::placeholder { color: rgba(235, 235, 245, 0.46); }
-.field:focus { border-color: rgba(255, 255, 255, 0.30); }
+.field::placeholder { color: var(--bid-placeholder); }
+.field:focus { border-color: var(--bid-well-focus); }
 .field[disabled] { color: var(--label-2); cursor: default; }
-select.field {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-  padding-right: 32px;
-}
-select.field option { background: var(--popover-solid); color: var(--label); }
 
 .outbid {
   height: 44px;
@@ -247,7 +303,7 @@ select.field option { background: var(--popover-solid); color: var(--label); }
   transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
 }
 .outbid:hover { background: var(--accent-press); }
-.outbid[disabled] { background: rgba(255, 255, 255, 0.14); color: var(--label-2); cursor: default; }
+.outbid[disabled] { background: var(--bid-inert); color: var(--label-3); cursor: default; }
 
 /* ---- lookup results ------------------------------------------------------
    A static block under the form, not a floating popover: it appears only
@@ -267,14 +323,19 @@ select.field option { background: var(--popover-solid); color: var(--label); }
 }
 .bid-note b { color: var(--label); font-weight: 600; }
 .bid-note .money-t { color: var(--accent); font-weight: 600; }
-.bid-note.is-error { color: #FF9F0A; }
+/* --attention, not a hardcoded #FF9F0A: that value is the dark theme's and it
+   is 2.2:1 on a light page, which is where the flat bar renders. Over the band
+   the surface is near black in both themes, so .spotlight pins --attention back
+   to #FF9F0A; see the ramp it pins in board.css. Both homes therefore clear AA
+   from one declaration here. */
+.bid-note.is-error { color: var(--attention); }
 
 .bid-picks {
   margin-top: 10px;
   border-radius: var(--r-2);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--bid-well);
+  border: 1px solid var(--bid-well-edge);
 }
 .bid-pick {
   display: flex;
@@ -283,11 +344,11 @@ select.field option { background: var(--popover-solid); color: var(--label); }
   width: 100%;
   text-align: left;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--bid-hairline);
   transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
 }
 .bid-pick:last-child { border-bottom: 0; }
-.bid-pick:hover { background: rgba(255, 255, 255, 0.08); }
+.bid-pick:hover { background: var(--fill-hover); }
 .bid-pick .icon { --icon-size: 28px; }
 .bid-pick span {
   font-size: 13px;
@@ -399,6 +460,7 @@ select.field option { background: var(--popover-solid); color: var(--label); }
   .hero-label { font-size: 20px; }
 }
 @media (max-width: 640px) {
-  .stats { font-size: 10.5px; }
+  .stats { height: 42px; }
+  .stats-pill { font-size: 10.5px; padding-inline: 12px; }
   .stat-visitors { display: none; }
 }

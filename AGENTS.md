@@ -18,12 +18,25 @@ contributes nothing to it and it contributes nothing to `vite.config.ts`.
 
 - No `any`. Prefer inferred and derived types.
 - True black `#000` in dark, Apple's system light palette in light. Information dense, minimal copy,
-  no decorative card or pill chrome.
+  no decorative card or pill chrome. Three surfaces are the named exceptions and there are no
+  others: the **podium** (ranks 1 to 3 carry a tinted plate whose fill and edge step down to
+  nothing by rank 4, `--heat-*` in `tokens.css`), the **interlude** cards between rank 3 and rank 4,
+  and the **stats pill**, which is the only use of `--r-full` on the site. Rank 4 and below is a
+  hairline row with no chrome at all.
+- Both themes carry a real three-step label ramp and both are computed against their own page
+  colour. Apple's own alphas are correct for Apple's surfaces and wrong for `#000` and for `#FFF`
+  at 11px; `tokens.css` shows the ratio next to every step. Do not copy an alpha across themes.
 - **No em dashes** anywhere: code, comments, copy, commit messages.
 - `backdrop-filter` may appear on at most two selectors in the whole codebase, both structural
-  (the sticky header, the bid bar). Never on a row, rail item, ticker item, divider, icon, hover or
-  focus state.
+  (the sticky header, the bid bar). Never on a row, rail item, interlude card, divider, icon,
+  hover or focus state. The bid bar's material is four tokens (`--bid-surface`, `--bid-filter`,
+  `--bid-dim`, `--bid-shadow`) because it has two homes: blurred glass over the spotlight band, a
+  raised well when it renders flat with no band above it. Switch homes by setting tokens, never by
+  naming `backdrop-filter` a third time.
 - No `@keyframes` that runs without a user gesture. No spinners, shimmer, pulse or ambient motion.
+  The theme switch is the one animation on the site: a View Transitions circular reveal grown from
+  the toggle button, driven by `toggleTheme()` in `src/lib/theme.ts`. It bails to a plain attribute
+  swap under `prefers-reduced-motion` or without `startViewTransition`.
 - Whole US dollars only. Cents exist in exactly one place: Stripe `unit_amount = dollars * 100`.
 - There is no per-listing detail page. The string "see details" must not appear in the codebase.
 - Never import from `convex/_generated/server` inside `src/`. That pulls the Convex function runtime

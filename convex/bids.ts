@@ -489,6 +489,9 @@ export const recentActivity = query({
       return [
         {
           bidId: bid._id,
+          // The slug is what makes the strip's cards outbound links, through
+          // /go/:slug like every other anchor on a board.
+          slug: listing.slug,
           name: listing.name,
           iconUrl: listing.iconUrl,
           amount: bid.amount,

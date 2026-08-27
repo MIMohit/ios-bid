@@ -55,6 +55,9 @@ export const Route = createFileRoute("/category/$slug/")({
       context.queryClient.ensureQueryData(convexQuery(api.categories.totals, {})),
       context.queryClient.ensureQueryData(convexQuery(api.stats.strip, {})),
       context.queryClient.ensureQueryData(convexQuery(api.bids.recentActivity, {})),
+      context.queryClient.ensureQueryData(
+        convexQuery(api.board.podium, { window: "today", categorySlug: params.slug }),
+      ),
     ]);
 
     if (deps.page > board.pageCount) throw notFound();
@@ -120,6 +123,11 @@ function CategoryBoard() {
     convexQuery(api.clicks.forListings, { listingIds: board.rows.map((row) => row.id) }),
   ).data;
   const activity = useSuspenseQuery(convexQuery(api.bids.recentActivity, {})).data;
+  // The interlude between rank 3 and rank 4 shows the board this one is not,
+  // scoped to the same category so "See all" lands on a sibling board.
+  const podium = useSuspenseQuery(
+    convexQuery(api.board.podium, { window: "today", categorySlug: slug }),
+  ).data;
   const stats = useSuspenseQuery(convexQuery(api.stats.strip, {})).data;
   const categories = useSuspenseQuery(convexQuery(api.categories.totals, {})).data;
 
@@ -156,6 +164,12 @@ function CategoryBoard() {
               rows={board.rows}
               clicks={clicks}
               activity={activity}
+              podium={{
+                heading: `Today's top ${name}`,
+                href: `${path}/today`,
+                empty: `No ${name} app has been paid for in the last 24 hours.`,
+                rows: podium,
+              }}
               heading={`${name} leaderboard`}
               caption={
                 board.total === 0

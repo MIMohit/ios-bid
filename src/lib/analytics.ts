@@ -14,6 +14,21 @@
 const US_HOST = "https://us.i.posthog.com";
 
 /**
+ * The public traffic dashboard, PostHog's own hosted page.
+ *
+ * The token is a share token, not a secret: it grants read access to this one
+ * dashboard and nothing else, which is the whole point of publishing it.
+ * Revoking is a toggle in PostHog, not a redeploy here.
+ *
+ * It lives in this module rather than next to the one page that used to embed
+ * it because the stats line in the header now links straight at it. Two
+ * hardcoded copies of a token is one copy too many.
+ */
+const TRAFFIC_TOKEN = "ZtjOkb-GIbHUyxVr_U-5xz4D-HNzKw";
+export const TRAFFIC_DASHBOARD = `https://us.posthog.com/shared/${TRAFFIC_TOKEN}`;
+export const TRAFFIC_EMBED = `https://us.posthog.com/embedded/${TRAFFIC_TOKEN}`;
+
+/**
  * Config, and the reasoning for each departure from PostHog's defaults.
  *
  * `persistence: "memory"` with `person_profiles: "identified_only"` is what

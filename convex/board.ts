@@ -155,3 +155,37 @@ export const destination = query({
     return listing ? { listingId: listing._id, url: listing.url } : null;
   },
 });
+
+/**
+ * The three cards that sit between rank 3 and rank 4 of a board.
+ *
+ * A separate query from `page` on purpose. The block shows the OTHER window's
+ * leaders for the same scope, so an all-time board would otherwise have to run
+ * `page` a second time for a window nobody is looking at, and `page` returns
+ * fifty full rows including a rank-1 screenshot array. Six fields from three
+ * documents is what the cards render, so six fields from three documents is
+ * what this reads.
+ *
+ * `rank` is the position within this scope, so on a category board it is the
+ * rank in that category. That is the number the card prints and the board the
+ * "See all" link goes to, so the two agree.
+ */
+export const podium = query({
+  args: { window: windowArg, categorySlug: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const categorySlug =
+      args.categorySlug && args.categorySlug !== "all" ? args.categorySlug : null;
+
+    const rows = await boardScan(ctx, args.window, categorySlug).order("desc").take(3);
+
+    return rows.map((l, i) => ({
+      id: l._id,
+      slug: l.slug,
+      name: l.name,
+      subtitle: l.subtitle,
+      iconUrl: l.iconUrl,
+      rank: i + 1,
+      bid: args.window === "today" ? l.todayBid : l.totalBid,
+    }));
+  },
+});

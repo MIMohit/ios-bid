@@ -1,4 +1,5 @@
-import { THEME_STORAGE_KEY, type Theme } from "~/lib/theme";
+import { useRef } from "react";
+import { toggleTheme } from "~/lib/theme";
 
 type BoardWindow = "all" | "today";
 
@@ -63,31 +64,26 @@ export function Header({ window, hrefFor }: Props) {
  * The theme toggle.
  *
  * `<html data-theme>` is the single source of truth: the blocking script in
- * __root.tsx stamps it before first paint and this reads it back on click.
- * Both icons are always in the markup and CSS shows one, so nothing here reads
- * the theme during render and there is no hydration mismatch to guard against.
+ * __root.tsx stamps it before first paint and toggleTheme reads it back on
+ * click. Both icons are always in the markup and CSS shows one, so nothing here
+ * reads the theme during render and there is no hydration mismatch to guard
+ * against.
  *
- * The storage key comes from ~/lib/theme.ts, which the blocking script also
- * reads, so the two cannot drift apart.
+ * The ref exists for one reason: the circular reveal grows from wherever this
+ * button actually is, so the rect is measured at click time rather than assumed
+ * to be the top right corner. Everything else about the switch, including the
+ * storage key the blocking script also reads, lives in ~/lib/theme.ts.
  */
 function ThemeToggle() {
+  const button = useRef<HTMLButtonElement>(null);
+
   return (
     <button
+      ref={button}
       type="button"
       className="theme-btn"
       aria-label="Switch theme"
-      onClick={() => {
-        const root = document.documentElement;
-        const next: Theme = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-        root.setAttribute("data-theme", next);
-        // Private browsing and blocked storage both throw here. The theme still
-        // applies for this page view, it just does not persist.
-        try {
-          localStorage.setItem(THEME_STORAGE_KEY, next);
-        } catch {
-          // ignore
-        }
-      }}
+      onClick={() => toggleTheme(button.current?.getBoundingClientRect() ?? null)}
     >
       <svg
         className="theme-moon"

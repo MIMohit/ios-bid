@@ -6,21 +6,13 @@ import { Footer } from "~/components/chrome/Footer";
 import { Header } from "~/components/chrome/Header";
 import { StatsStrip } from "~/components/chrome/StatsStrip";
 import { ConnectionState } from "~/components/ConnectionState";
+import { TRAFFIC_DASHBOARD, TRAFFIC_EMBED } from "~/lib/analytics";
 import { hoursSince, money } from "~/lib/format";
 import { breadcrumbList } from "~/lib/jsonld-board";
 import { absolute, pageHead } from "~/lib/seo";
 
 /** The window the table covers. Long enough to show a trend, short enough to read. */
 const DAYS = 30;
-
-/**
- * The public PostHog dashboard. A share token, not a secret: it grants read
- * access to this one dashboard and nothing else, which is the whole point of
- * publishing it. Revoking is a toggle in PostHog, not a redeploy here.
- */
-const TRAFFIC_TOKEN = "ZtjOkb-GIbHUyxVr_U-5xz4D-HNzKw";
-const TRAFFIC_DASHBOARD = `https://us.posthog.com/shared/${TRAFFIC_TOKEN}`;
-const TRAFFIC_EMBED = `https://us.posthog.com/embedded/${TRAFFIC_TOKEN}`;
 
 export const Route = createFileRoute("/stats")({
   loader: async ({ context }) => {
