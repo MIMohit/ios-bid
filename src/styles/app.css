@@ -72,22 +72,46 @@ p { margin: 0; }
    does not cross the "no @keyframes without a user gesture" line.
 
    Both snapshots are held still and the incoming theme is revealed by a circle
-   growing from the toggle button. Nothing cross-fades, so no text ghosts and no
-   element is painted twice at partial opacity. The circle itself is animated in
-   lib/theme.ts, where the button's own rect is read at click time: the geometry
-   depends on where the button actually is, which CSS cannot know.
+   growing from the viewport's top right corner. Nothing cross-fades, so no text
+   ghosts and no element is painted twice at partial opacity.
+
+   The reveal is declared HERE rather than driven from JavaScript, and that is
+   load bearing. A view transition ends when every animation on its pseudo-element
+   tree has finished, and the group's own default animation is far shorter than
+   this one: a script-driven clip added after `ready` raced it, so the transition
+   tore down with the circle part way across and the rest of the page changed in
+   one jump. One declared duration on the pseudo-element cannot race anything.
+
+   The geometry needs no measuring either. `at 100% 0` is the top right corner of
+   the snapshot, and a percentage circle radius resolves against the box's own
+   diagonal, so 150% always clears the far corner whatever the viewport is.
+
+   This is the only @keyframes in the codebase. It runs on a pseudo-element that
+   exists only for the duration of a transition, and a transition only ever
+   starts from a click, so the no-ambient-motion rule holds.
 
    No blur on the reveal edge. The blur budget is two selectors and both are
    spent in glass.css, and a filtered full-viewport pseudo-element for half a
    second is the most expensive thing this site could ask a compositor to do.
    =========================================================================== */
+@keyframes theme-reveal {
+  from { clip-path: circle(0% at 100% 0); }
+  to   { clip-path: circle(150% at 100% 0); }
+}
+
+/* The outgoing theme holds still at full opacity underneath and is uncovered
+   all at once when the transition ends, which by then is off screen. */
 ::view-transition-old(root),
-::view-transition-new(root) {
+::view-transition-group(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 9999; }
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  z-index: 9999;
+  animation: theme-reveal 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 /* ===========================================================================
    Reduced motion.
@@ -100,7 +124,8 @@ p { margin: 0; }
    The theme switch is the one gesture-driven animation. Its keyframes are
    zeroed below AND lib/theme.ts checks the same query before it starts a
    transition at all, so the reveal is skipped rather than run at zero
-   duration.
+   duration. Both matter: the CSS alone would still pay for a transition
+   nobody sees.
    =========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

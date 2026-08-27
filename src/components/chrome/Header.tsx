@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { toggleTheme } from "~/lib/theme";
 
 type BoardWindow = "all" | "today";
@@ -69,21 +68,16 @@ export function Header({ window, hrefFor }: Props) {
  * reads the theme during render and there is no hydration mismatch to guard
  * against.
  *
- * The ref exists for one reason: the circular reveal grows from wherever this
- * button actually is, so the rect is measured at click time rather than assumed
- * to be the top right corner. Everything else about the switch, including the
- * storage key the blocking script also reads, lives in ~/lib/theme.ts.
+ * The whole switch, including the circular reveal and the storage key the
+ * blocking script also reads, lives in ~/lib/theme.ts. This is only the control.
  */
 function ThemeToggle() {
-  const button = useRef<HTMLButtonElement>(null);
-
   return (
     <button
-      ref={button}
       type="button"
       className="theme-btn"
       aria-label="Switch theme"
-      onClick={() => toggleTheme(button.current?.getBoundingClientRect() ?? null)}
+      onClick={() => toggleTheme()}
     >
       <svg
         className="theme-moon"

@@ -13,10 +13,6 @@ export type Theme = "dark" | "light";
  */
 export const THEME_SCRIPT = `(function(){try{var k=${JSON.stringify(THEME_STORAGE_KEY)};var s=localStorage.getItem(k);var t=(s==="dark"||s==="light")?s:(window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
-/** How long the reveal takes, and on what curve. */
-const REVEAL_MS = 520;
-const REVEAL_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
-
 /**
  * The theme a transition is on its way to, while one is in flight.
  *
@@ -29,7 +25,7 @@ const REVEAL_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 let pending: Theme | null = null;
 
 /**
- * Flip the theme, revealing the new one with a circle grown from `origin`.
+ * Flip the theme, revealing the new one with a circle from the top right corner.
  *
  * `<html data-theme>` is the single source of truth: the blocking script above
  * stamps it before first paint and this reads it back. Nothing here reads the
@@ -41,17 +37,19 @@ let pending: Theme | null = null;
  * static snapshots and clips one of them, so the cost is one composited circle
  * regardless of how much page is behind it.
  *
- * `origin` is the button's own rect, read at click time rather than assumed to
- * be the top right corner, so the circle still starts under the finger when the
- * header reflows or the button moves. The radius reaches the furthest viewport
- * corner from that point, which is what guarantees the circle clears the screen
- * instead of stopping short of it.
+ * The circle itself is entirely in app.css, under `theme-reveal`. It grows from
+ * the viewport's top right corner rather than from the toggle's rect, because
+ * the header sits in a 1200px column centred in the page and on a wide screen a
+ * circle grown from the button reads as starting from the middle of the screen.
+ * Declaring it in CSS is also what stops the transition ending before the wipe
+ * does; see the note there. Nothing about the geometry needs measuring, so
+ * nothing about it is here.
  *
- * Three ways out, and all of them still change the theme: no origin to grow
- * from, a viewer who asked for less motion, or a browser without view
- * transitions. The theme is the feature; the circle is not.
+ * Two ways out, and both still change the theme: a viewer who asked for less
+ * motion, or a browser without view transitions. The theme is the feature; the
+ * circle is not.
  */
-export function toggleTheme(origin: DOMRect | null): void {
+export function toggleTheme(): void {
   const root = document.documentElement;
   const current = pending ?? (root.getAttribute("data-theme") === "light" ? "light" : "dark");
   const next: Theme = current === "light" ? "dark" : "light";
@@ -70,40 +68,15 @@ export function toggleTheme(origin: DOMRect | null): void {
   };
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (origin === null || reduced || typeof document.startViewTransition !== "function") {
+  if (reduced || typeof document.startViewTransition !== "function") {
     apply();
     return;
   }
 
-  const x = origin.left + origin.width / 2;
-  const y = origin.top + origin.height / 2;
-  const radius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  );
-
-  const transition = document.startViewTransition(apply);
-
   // `ready` rejects if a second press starts a transition before this one has
   // captured. The theme has already flipped by then, so there is nothing to
   // recover and nothing to report.
-  void transition.ready
-    .then(() => {
-      root.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${radius}px at ${x}px ${y}px)`,
-          ],
-        },
-        {
-          duration: REVEAL_MS,
-          easing: REVEAL_EASING,
-          pseudoElement: "::view-transition-new(root)",
-        },
-      );
-    })
-    .catch(() => {
-      // ignore
-    });
+  void document.startViewTransition(apply).ready.catch(() => {
+    // ignore
+  });
 }
