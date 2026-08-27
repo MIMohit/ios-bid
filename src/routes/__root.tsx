@@ -7,6 +7,7 @@ import { Squircle } from "~/components/Squircle";
 import { THEME_SCRIPT } from "~/lib/theme";
 import { ORGANIZATION, WEBSITE } from "~/lib/jsonld";
 import { posthogSnippet } from "~/lib/analytics";
+import { Analytics } from "@vercel/analytics/react";
 
 const SITE = "https://iosrank.lol";
 
@@ -84,6 +85,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body>
         <Squircle />
         {children}
+        <Analytics />
         <Scripts />
       </body>
     </html>
