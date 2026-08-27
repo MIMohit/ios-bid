@@ -613,9 +613,22 @@
     top: 68px;   /* header 52 + 16 */
     max-height: calc(100dvh - 84px);
     overflow-y: auto;
+    /* overflow-x, explicitly. A computed `visible` on one axis becomes `auto`
+       when the other axis is not visible, so `overflow-y: auto` alone was
+       putting a horizontal scrollbar under the rail the moment a row was a
+       fraction of a pixel too wide. Nothing here scrolls sideways. */
+    overflow-x: hidden;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
+    /* No scrollbar chrome. The rail is a price list, not a pane, and at most
+       viewport heights all 27 categories fit without scrolling at all: a bar
+       that appears only on a short window reads as a rendering fault. Same
+       treatment the tape, the shot strip and the mobile rail already get.
+       The fade below is what says there is more. */
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(180deg, #000 0 calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(180deg, #000 0 calc(100% - 24px), transparent 100%);
   }
+  .rail::-webkit-scrollbar { display: none; }
 }
 
 .rail-head {
