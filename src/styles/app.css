@@ -65,12 +65,42 @@ p { margin: 0; }
 }
 
 /* ===========================================================================
+   The theme switch.
+
+   The only view transition on the site, and the only animation anywhere that is
+   not a hover or a press. It runs from a click and from nothing else, so it
+   does not cross the "no @keyframes without a user gesture" line.
+
+   Both snapshots are held still and the incoming theme is revealed by a circle
+   growing from the toggle button. Nothing cross-fades, so no text ghosts and no
+   element is painted twice at partial opacity. The circle itself is animated in
+   lib/theme.ts, where the button's own rect is read at click time: the geometry
+   depends on where the button actually is, which CSS cannot know.
+
+   No blur on the reveal edge. The blur budget is two selectors and both are
+   spent in glass.css, and a filtered full-viewport pseudo-element for half a
+   second is the most expensive thing this site could ask a compositor to do.
+   =========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 9999; }
+
+/* ===========================================================================
    Reduced motion.
 
-   There is no ambient motion on this site to switch off: no keyframes runs
+   There is no ambient motion on this site to switch off: nothing animates
    without a user gesture, and there are no spinners, shimmers or pulses. What
    remains is press and hover feedback, which is kept: a press with no
    acknowledgement is a broken button, not an accessible one.
+
+   The theme switch is the one gesture-driven animation. Its keyframes are
+   zeroed below AND lib/theme.ts checks the same query before it starts a
+   transition at all, so the reveal is skipped rather than run at zero
+   duration.
    =========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

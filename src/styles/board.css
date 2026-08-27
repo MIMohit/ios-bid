@@ -1,11 +1,15 @@
 /* ===========================================================================
    The board.
 
-   One grid, four content columns, one money column that never moves. The whole
-   page's hierarchy is carried by scale alone: icon size, type size, type weight
-   and row height. No rank anywhere gets a tint, a border, a card, a pill, a
-   glow or a badge. That restraint IS the design, so if a rank ever needs a box
-   to be legible, the scale ladder is wrong, not the ban.
+   One grid, four content columns, one money column that never moves. Hierarchy
+   is carried by scale: icon size, type size, type weight and row height.
+
+   ONE exception, and it is the whole of it: ranks 1, 2 and 3 carry a tinted
+   plate whose fill and edge step down to nothing by rank 4. See "the podium"
+   below. Rank 4 and everything under it is a hairline row with no tint, no
+   border, no card, no pill, no glow and no badge, and no rank anywhere gets a
+   second decoration on top of the plate. If a rank below 3 ever needs a box to
+   be legible, the scale ladder is wrong, not the ban.
 
    Nothing in this file may blur its backdrop. Those two surfaces, and the
    rule behind the limit, live in glass.css.
@@ -104,8 +108,10 @@
   transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
 }
 
-.row:hover  { background: var(--fill-hover); }
-.row:active { background: var(--fill-press); }
+/* background-COLOR, never the shorthand: the podium plates below carry their
+   tint in background-image, and `background: ...` would reset it on hover. */
+.row:hover  { background-color: var(--fill-hover); }
+.row:active { background-color: var(--fill-press); }
 
 /* ---- the graduated rank ramp ---------------------------------------------
    PURE SCALE. Read the ladder in tokens.css: row height is icon + 24 at every
@@ -118,10 +124,77 @@
 .row.is-t2 { --icon-size: var(--tier2-icon); --row-title: var(--tier2-title); --row-lead: var(--tier2-lead); --row-price: var(--tier2-price); --row-h: var(--tier2-row); --rank-size: 24px; --rank-track: 48px; }
 .row.is-t3 { --icon-size: var(--tier3-icon); --row-title: var(--tier3-title); --row-lead: var(--tier3-lead); --row-price: var(--tier3-price); --row-h: var(--tier3-row); --rank-size: 20px; --rank-track: 44px; }
 
-/* Two heavier rules bracket the podium. That is the whole grouping treatment:
-   nothing is enclosed. */
-.row.is-t1 { border-top: 1px solid var(--hairline-strong); }
-.row.is-t3 { border-bottom: 1px solid var(--hairline-strong); }
+/* ---- the podium ----------------------------------------------------------
+   Ranks 1, 2 and 3 leave the hairline list and become tinted plates whose fill
+   and edge step down to nothing by rank 4. This is the one place on the board
+   where a rank is given chrome, and it is deliberate: the top three are what a
+   bidder is paying to reach, and the ramp is the price ladder made visible.
+
+   Three things here are load bearing.
+
+   The plate's margin and padding are equal and opposite, exactly as a row's
+   are, so the seven grid tracks resolve to the same widths as rank 4's and the
+   money column stays one vertical rule down the whole board. Change one, change
+   the other, or the dollar figures step sideways at rank 4.
+
+   The edge is a pseudo-element, not a border, for that same reason: with
+   border-box a real border would eat 2px of track and shift the money column.
+
+   The tint is a background-IMAGE, which leaves background-color free for the
+   hover and press fills to composite over it and keeps the existing transition
+   working. A background-color tint would be replaced by them, not layered
+   under them.
+
+   On page 1 of every board rank 1 is the spotlight band, so the podium the list
+   actually renders starts at rank 2. The ramp shifts up with it (see
+   .is-spotlighted below), because the strongest plate belongs on the top row
+   the board draws, not on a rank the board is not drawing. .is-t1 as a plate is
+   therefore reached only where a board has no band above it, which today is
+   /r/:slug for a listing that holds rank 1. */
+.row.is-t1,
+.row.is-t2,
+.row.is-t3 {
+  margin-inline: -16px;
+  padding-inline: 16px;
+  border-bottom: 0;
+  border-radius: 16px;
+  /* No bottom border on a plate, so the 15px the base row subtracts for its
+     padding and rule becomes 14px here. */
+  contain-intrinsic-size: auto calc(var(--row-h) - 14px);
+}
+.row.is-t1 { background-image: linear-gradient(var(--heat-1), var(--heat-1)); }
+.row.is-t2 { background-image: linear-gradient(var(--heat-2), var(--heat-2)); }
+.row.is-t3 { background-image: linear-gradient(var(--heat-3), var(--heat-3)); }
+
+/* 8px between the plates, 16px before the uniform list resumes. */
+.row.is-t1,
+.row.is-t2 { margin-bottom: 8px; }
+.row.is-t3 { margin-bottom: 16px; }
+
+.row.is-t1::after,
+.row.is-t2::after,
+.row.is-t3::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--heat-edge-3);
+  /* The whole row is an outbound link through .name::after, and this sits above
+     that layer in paint order. It must never take the tap. */
+  pointer-events: none;
+}
+.row.is-t1::after { border-color: var(--heat-edge-1); }
+.row.is-t2::after { border-color: var(--heat-edge-2); }
+
+/* Rank 1 is above as a photographic band, so the list's own podium is ranks 2
+   and 3 and they take the ramp's top two steps. Without this the only board
+   anyone looks at would show the middle step and the faintest one, and the ramp
+   would not read as a ramp. Board.tsx sets the class from the same `spotlighted`
+   flag it uses to drop rank 1 out of the list, so the two cannot disagree. */
+.board.is-spotlighted .row.is-t2 { background-image: linear-gradient(var(--heat-1), var(--heat-1)); }
+.board.is-spotlighted .row.is-t3 { background-image: linear-gradient(var(--heat-2), var(--heat-2)); }
+.board.is-spotlighted .row.is-t2::after { border-color: var(--heat-edge-1); }
+.board.is-spotlighted .row.is-t3::after { border-color: var(--heat-edge-2); }
 
 /* ---- column 1, rank ------------------------------------------------------
    One step above meta size even on tier 0: the rank is the row's index and has
@@ -298,51 +371,166 @@
   color: var(--label-2);
 }
 
-/* ---- activity tape -------------------------------------------------------
-   A static hairline strip that re-renders when Convex pushes. No marquee, no
-   auto-scroll, no fade cycling. A raised well, never glass. */
-.tape-wrap { border-bottom: 1px solid var(--hairline); }
-.tape {
+/* ---- the interlude -------------------------------------------------------
+   Two blocks sitting between rank 3 and rank 4: the other window's top three as
+   cards, then the latest settled payments as a scrolling strip.
+
+   Both reserve their height whether or not they have entries, which is the same
+   rule the single tape strip they replaced followed and for the same reason: a
+   block that grows from nothing pushes ranks 4 through 50 down the page, and
+   that is a large layout shift on the site's primary surface.
+
+   Raised wells, never glass. The blur budget is two selectors and both are
+   spent in glass.css.
+
+   Deeper pages carry no interlude, because it is keyed on rank 3 and page 2
+   starts at rank 51. That is deliberate: the block is an entry point onto the
+   other board, and somebody on page 4 has already chosen a board. */
+.interlude { display: block; margin-block: 2px 18px; }
+.slab + .slab { margin-top: 18px; }
+
+.slab-head {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 44px;   /* fixed, so a tape that grows from empty cannot push ranks 4..50 */
-  margin-inline: -12px;
-  padding-inline: 12px;
-  background: var(--bg-raised);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
 }
-.tape-label { flex: none; font-size: 11px; font-weight: 600; letter-spacing: 0.008em; color: var(--label-3); }
-.tape-label::before {
+.slab-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  color: var(--label);
+}
+.slab-more { font-size: 11.5px; font-weight: 500; letter-spacing: 0.004em; color: var(--label-3); }
+.slab-more:hover { color: var(--label); }
+
+/* Accent-as-mark, the same 5px dot the category leader and the live count use.
+   It says the block below is being pushed to, nothing more. */
+.slab-live::before {
   content: "";
   display: inline-block;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--accent);
-  margin-right: 6px;
-  vertical-align: 1px;
+  margin-right: 7px;
+  vertical-align: 2px;
 }
-.tape-scroll {
-  display: flex;
-  overflow-x: auto;
-  scrollbar-width: none;
+
+/* ---- the other window's top three ---------------------------------------- */
+.today-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 72px;
+}
+.today-card {
+  display: grid;
+  grid-template-columns: 20px 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   min-width: 0;
-  -webkit-mask-image: linear-gradient(90deg, #000 0 calc(100% - 40px), transparent 100%);
-          mask-image: linear-gradient(90deg, #000 0 calc(100% - 40px), transparent 100%);
+  min-height: 72px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  /* Fill plus a hairline, which is the raised well glass.css specifies for
+     anything lifted that is not one of the two blurred surfaces. --bg-raised
+     alone is 1.06:1 on true black and the card stops reading as a card. */
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
 }
-.tape-scroll::-webkit-scrollbar { display: none; }
-.tape-item {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--label-3);
+.today-card:hover { background: var(--bg-raised-2); }
+.today-card .icon { --icon-size: 36px; }
+.today-rank { font-size: 12px; font-weight: 600; color: var(--label-3); text-align: right; }
+.today-text { min-width: 0; }
+.today-name,
+.today-sub,
+.today-bid {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  padding-inline: 14px;
-  border-left: 1px solid var(--hairline-faint);
 }
-.tape-item:first-child { border-left: 0; padding-left: 0; }
-.tape-item b  { color: var(--label-2); font-weight: 500; }
-.tape-item em { color: var(--accent); font-style: normal; }
-.tape-item i  { color: var(--label-4); font-style: normal; margin-left: 6px; }
+.today-name { font-size: 13px; font-weight: 600; letter-spacing: -0.010em; color: var(--label); }
+/* min-height, because the span is rendered even when it is empty and an empty
+   block box generates no line box and so no height. */
+.today-sub  { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-3); margin-top: 1px; line-height: 15px; min-height: 15px; }
+.today-bid  { font-size: 12.5px; font-weight: 600; letter-spacing: -0.010em; color: var(--accent); margin-top: 3px; }
+
+/* Same height as a filled grid, so a board whose other window is empty does not
+   move the fifty rows below it. */
+.slab-empty {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  padding-inline: 13px;
+  border-radius: 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--label-3);
+}
+
+/* ---- latest activity ------------------------------------------------------
+   Horizontal scroll with a right-edge mask, so the strip degrades on a phone by
+   losing reach rather than by losing entries. */
+.act-row {
+  display: flex;
+  gap: 8px;
+  min-height: 56px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 calc(100% - 44px), transparent 100%);
+          mask-image: linear-gradient(90deg, #000 0 calc(100% - 44px), transparent 100%);
+}
+.act-row::-webkit-scrollbar { display: none; }
+.act-card {
+  flex: none;
+  width: 214px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--hairline);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.act-card:hover { background: var(--bg-raised-2); }
+/* .act-row scrolls, so it clips on both axes, and the card stretches to the
+   flex line: the global outset focus ring has nowhere to paint and is cut off
+   on every edge. An inset ring sits inside the card and cannot be clipped.
+   The accent is 10.3:1 on the dark card fill and 4.5:1 on the light one, well
+   past the 3:1 a non-text indicator needs. */
+.act-card:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--focus-color);
+}
+.act-card .icon { --icon-size: 28px; }
+.act-text { min-width: 0; }
+.act-name,
+.act-where,
+.act-when {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.act-name  { font-size: 12.5px; font-weight: 600; letter-spacing: -0.010em; color: var(--label); }
+.act-where { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-2); margin-top: 1px; }
+/* The amount is money-as-text, so it takes the accent like every other figure
+   on the board. */
+.act-where b { color: var(--accent); font-weight: 600; }
+/* A timestamp is information, so it sits on the meta floor and not on
+   --label-4, which tokens.css marks NON-INFORMATIONAL. */
+.act-when  { font-size: 10.5px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-3); }
 
 /* ---- pagination ----------------------------------------------------------
    A raised well. Never blurred. */
@@ -376,8 +564,30 @@
 }
 .pg:hover { background: var(--fill-hover); color: var(--label); }
 .pg[aria-current="page"] { background: var(--bg-raised-2); color: var(--label); font-weight: 600; }
-.pg[disabled] { color: var(--label-4); cursor: default; }
-.pg[disabled]:hover { background: none; color: var(--label-4); }
+/* Inertness is carried by the missing hover and the cursor, not by dropping the
+   label below the info floor: "Prev" being absent on page 1 is a fact the
+   reader needs, and --label-4 is marked NON-INFORMATIONAL in tokens.css. */
+.pg[disabled] { color: var(--label-3); cursor: default; }
+.pg[disabled]:hover { background: none; color: var(--label-3); }
+
+/* Nothing styled .refresh at all, so the icon and its label stacked into two
+   lines on every board page. Same shape as a .pg, because it sits in the same
+   row and does the same kind of thing. */
+.refresh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding-inline: 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--label-2);
+  white-space: nowrap;
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1),
+              color 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.refresh:hover { background: var(--fill-hover); color: var(--label); }
 
 /* ---- page shell and the category rail ------------------------------------
    240 + 36 + 868 = 1144, which is exactly the content box at the 1200px page
@@ -481,6 +691,11 @@
   --accent:     #30D158;
   --accent-ink: #000000;
   --accent-press: #28BA4C;
+  /* The bid bar's error line lives on this band, and light's --attention is
+     #8A5300, darkened to clear a WHITE page. On the band it measures 2.26:1.
+     The band is dark in both themes, so it takes the dark value like the rest
+     of the ramp above. */
+  --attention:  #FF9F0A;
   --rim-top:    rgba(255, 255, 255, 0.20);
   --rim-mid:    rgba(255, 255, 255, 0.06);
   --rim-bottom: rgba(255, 255, 255, 0.02);
@@ -748,6 +963,20 @@
   .claim-prefix { display: none; }
   .claim::before { content: "\2191\00a0"; }
 
+  /* The plate keeps margin and padding equal and opposite, same contract as the
+     desktop rule, so the seven tracks still resolve to rank 4's widths. */
+  .row.is-t1,
+  .row.is-t2,
+  .row.is-t3 {
+    margin-inline: -10px;
+    padding-inline: 10px;
+    border-radius: 14px;
+  }
+
+  .today-grid { grid-template-columns: minmax(0, 1fr); }
+  .today-card { min-height: 64px; }
+  .today-grid, .slab-empty { min-height: 0; }
+
   .spot-shots { gap: 10px; }
   .shot, .shot img { width: 124px; }
   .shot img { height: 220px; }
@@ -800,13 +1029,17 @@
    shipped with no rules for .statgrid or .daily at all: the numbers ran into
    their own labels ("0here right now") and the table rendered as bare rows.
    Same omission as .doc had. Dense, hairlines only, no cards. */
+/* The separators live on the CELLS, not on the container.
+   The 1px-gap-over-a-tinted-background trick needs every track to be filled, and
+   auto-fit plus seven stats leaves two empty tracks on the last row: the
+   container's own background showed through them as a grey void the width of two
+   columns, on /about and on /stats, in both themes. A rule per cell has no such
+   failure mode and survives any count. */
 .statgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 1px;
   margin: 16px 0 24px;
-  background: var(--hairline-faint);
-  border-block: 1px solid var(--hairline-faint);
+  border-top: 1px solid var(--hairline-faint);
 }
 .statgrid .stat {
   display: flex;
@@ -814,7 +1047,7 @@
   gap: 2px;
   margin: 0;
   padding: 12px 14px 12px 0;
-  background: var(--bg);
+  border-bottom: 1px solid var(--hairline-faint);
 }
 .statgrid .stat b {
   font-size: 22px;

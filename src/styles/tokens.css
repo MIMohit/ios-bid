@@ -4,8 +4,10 @@
    Dark is direction C: true black #000 base, white primary text, every contrast
    ratio computed against #000000 (sRGB relative luminance, WCAG 2).
    Light is Apple's iOS system light palette, not an inverted dark theme.
-   Both carry identical density, the same row grid and the same no-card-chrome
-   rule. Light is not permission for shadows, cards or pills.
+   Both carry identical density and the same row grid. Chrome is limited to the
+   same three surfaces in both: the podium plates on ranks 1 to 3, the interlude
+   cards, and the stats pill. Light is not permission for a fourth, and it is
+   not permission for shadows.
 
    Resolution order, and why it is written three times:
      :root                                    light, the value every token has
@@ -41,24 +43,50 @@
   --opaque-separator: #C6C6C8;                    /* Apple opaqueSeparator */
 
   /* Apple's label hierarchy. */
-  --label:           #000000;                     /* label, 21.00:1 on #FFF */
-  --label-2:         rgba(60, 60, 67, 0.60);      /* secondaryLabel         */
-  --label-3:         rgba(60, 60, 67, 0.60);      /* meta. THE INFO FLOOR: Apple's
-                                                     tertiaryLabel (0.30) is 2.4:1
-                                                     on white and fails, so the
-                                                     floor holds at secondaryLabel */
-  --label-4:         rgba(60, 60, 67, 0.30);      /* tertiaryLabel. NON-INFORMATIONAL */
-  --label-5:         rgba(60, 60, 67, 0.18);      /* quaternaryLabel. Disabled chrome */
+  --label:           #000000;                     /* 21.00:1  name, money, headings   */
+  /* Apple's own secondaryLabel and tertiaryLabel are 0.60 and 0.30. Copied
+     straight across they compute to 3.44:1 and 2.40:1 on white, so the meta
+     floor never cleared AA at 11px, and because label-2 and label-3 both held
+     0.60 the row's three lines rendered as two: the subtitle and the meta line
+     were the same grey. Light therefore re-alphas the same hue to land where
+     the dark ramp lands (21.00, 8.08, 4.92 there against 21.00, 8.07, 5.97
+     here). Same argument that re-alphaed dark for #000, run in the other
+     direction: Apple's alphas are tuned for their own surfaces, not for this
+     one.
+
+     The ratios above are against #FFFFFF, but the floor is set by the DARKEST
+     surface each step actually lands on, not by the page. In light that is
+     --bg-raised-2 #E5E5EA, which the interlude cards swap in on hover, where
+     the same three steps are 16.72, 6.43 and 4.76. Lowering either alpha puts
+     the meta line under 4.5:1 on a hovered card. */
+  --label-2:         rgba(60, 60, 67, 0.90);      /*  8.07:1  subtitle, body prose    */
+  --label-3:         rgba(60, 60, 67, 0.80);      /*  5.97:1  meta. THE INFO FLOOR    */
+  --label-4:         rgba(60, 60, 67, 0.30);      /*  1.73:1  NON-INFORMATIONAL ONLY  */
+  --label-5:         rgba(60, 60, 67, 0.18);      /*          disabled chrome         */
 
   /* accent. Apple's systemGreen #34C759 is 1.95:1 on white and cannot carry
      money as text, so light uses the darkened green that clears AA at 15px.
      Same hue, same meaning, same single-accent rule. */
-  --accent:          #1B7F37;                     /* 4.61:1 on #FFFFFF            */
-  --accent-ink:      #FFFFFF;                     /* label colour ON accent fills */
+  --accent:          #197430;                     /* 5.86:1 on #FFFFFF, 4.67:1 on
+                                                     --bg-raised-2, which is what a
+                                                     hovered interlude card puts
+                                                     under 11px money text */
+  --accent-ink:      #FFFFFF;                     /* 5.86:1 ON accent fills       */
   --accent-press:    #146328;
   --accent-wash:     rgba(27, 127, 55, 0.12);
 
-  --positive:        #1B7F37;
+  /* The podium ramp: rank 1, 2 and 3 carry a tinted plate whose fill and edge
+     step down to nothing by rank 4. One hue, the accent's, at three strengths.
+     A single alpha cannot serve a white page and a black one, so both themes
+     carry their own, same as the glass films do. */
+  --heat-1:          rgba(27, 127, 55, 0.110);
+  --heat-2:          rgba(27, 127, 55, 0.065);
+  --heat-3:          rgba(27, 127, 55, 0.030);
+  --heat-edge-1:     rgba(27, 127, 55, 0.34);
+  --heat-edge-2:     rgba(27, 127, 55, 0.18);
+  --heat-edge-3:     rgba(27, 127, 55, 0.09);
+
+  --positive:        #197430;   /* the same token as accent: money up IS the accent */
   --negative:        #C11B12;   /* systemRed darkened to 5.34:1 on white */
   --attention:       #8A5300;   /* systemOrange darkened to 5.66:1       */
 
@@ -91,7 +119,7 @@
   /* background layers. L0 is the page and is never overridden. Rows never
      receive a layer. */
   --bg:              #000000;   /* L0  page                                       */
-  --bg-raised:       #0A0A0B;   /* L1  1.06:1  input wells, tape strip, pager     */
+  --bg-raised:       #0A0A0B;   /* L1  1.06:1  input wells, interlude cards, pager */
   --bg-raised-2:     #141416;   /* L2  1.15:1  pressed control, active tab        */
   --bg-inset:        #050506;   /* L-1 the one recessed surface: the amount field */
 
@@ -125,6 +153,14 @@
   --accent-ink:      #000000;                     /* label colour ON accent fills */
   --accent-press:    #28BA4C;
   --accent-wash:     rgba(48, 209, 88, 0.16);     /* selection, focus halo ONLY   */
+
+  /* The podium ramp. Mirror of the light block; edit both. */
+  --heat-1:          rgba(48, 209, 88, 0.130);
+  --heat-2:          rgba(48, 209, 88, 0.075);
+  --heat-3:          rgba(48, 209, 88, 0.034);
+  --heat-edge-1:     rgba(48, 209, 88, 0.40);
+  --heat-edge-2:     rgba(48, 209, 88, 0.21);
+  --heat-edge-3:     rgba(48, 209, 88, 0.10);
 
   /* semantic, not second accents */
   --positive:        #30D158;   /* the same token as accent: money up IS the accent */
@@ -161,7 +197,7 @@
   /* background layers. L0 is the page and is never overridden. Rows never
      receive a layer. */
   --bg:              #000000;   /* L0  page                                       */
-  --bg-raised:       #0A0A0B;   /* L1  1.06:1  input wells, tape strip, pager     */
+  --bg-raised:       #0A0A0B;   /* L1  1.06:1  input wells, interlude cards, pager */
   --bg-raised-2:     #141416;   /* L2  1.15:1  pressed control, active tab        */
   --bg-inset:        #050506;   /* L-1 the one recessed surface: the amount field */
 
@@ -195,6 +231,14 @@
   --accent-ink:      #000000;                     /* label colour ON accent fills */
   --accent-press:    #28BA4C;
   --accent-wash:     rgba(48, 209, 88, 0.16);     /* selection, focus halo ONLY   */
+
+  /* The podium ramp. Mirror of the light block; edit both. */
+  --heat-1:          rgba(48, 209, 88, 0.130);
+  --heat-2:          rgba(48, 209, 88, 0.075);
+  --heat-3:          rgba(48, 209, 88, 0.034);
+  --heat-edge-1:     rgba(48, 209, 88, 0.40);
+  --heat-edge-2:     rgba(48, 209, 88, 0.21);
+  --heat-edge-3:     rgba(48, 209, 88, 0.10);
 
   /* semantic, not second accents */
   --positive:        #30D158;   /* the same token as accent: money up IS the accent */
@@ -236,8 +280,10 @@
   --r-1:    8px;      /* inputs, buttons, menu items */
   --r-2:    14px;     /* popovers, menus */
   --r-3:    20px;     /* the bid bar */
-  --r-full: 9999px;   /* DECLARED AND DELIBERATELY UNUSED. Pill chrome is banned;
-                         this token is a tripwire, not an affordance. */
+  --r-full: 9999px;   /* ONE use, the stats pill in chrome.css, and it is named
+                         there. Pill chrome is otherwise banned; reaching for
+                         this token anywhere else is the tripwire it was
+                         declared to be. */
 
   /* ---- the rank ramp -------------------------------------------------------
      Hierarchy is PURE SCALE. No tinted background, no border, no card, no pill,

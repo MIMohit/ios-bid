@@ -11,7 +11,7 @@
    backdrop-filter. Everything else that wants to look "lifted" gets the raised
    well (a solid --bg-raised layer) plus a hairline, which costs nothing.
 
-   backdrop-filter is BANNED on rows, rail items, ticker items, dividers, icons,
+   backdrop-filter is BANNED on rows, rail items, interlude cards, dividers, icons,
    hover states and focus states. A blurred surface forces the compositor to
    re-read and re-filter everything behind it on every frame it is dirty, so the
    cost scales with the surface count, not the surface size.
@@ -93,25 +93,32 @@
 }
 
 /* ---- clear glass ---------------------------------------------------------
-   The bid bar, floating over the #1 app's screenshot band. This is the Clear
-   variant: far less tint than the chrome, so the artwork reads through it.
-   Apple's rule is that Clear requires a dimming layer beneath it, which is what
-   --glass-clear-dim on ::before provides; without it the white form labels sit
-   on whatever colour the screenshot happens to be.
+   The bid bar. It has TWO homes and they are different materials, which is the
+   whole reason this is written as four tokens rather than as one rule.
 
-   In the light theme the band underneath stays photographic and dark, so the
-   film lightens but the text on the bar stays white. That is why .bidbar pins
-   its own text colours rather than reading --label. */
+   Over the spotlight band it is the Clear variant: far less tint than the
+   chrome, so the artwork reads through it. Apple's rule is that Clear requires
+   a dimming layer beneath it, which is what --bid-dim on ::before provides;
+   without it the white form labels sit on whatever colour the screenshot
+   happens to be. The band is photographic and dark in BOTH themes, so the film
+   lightens in light mode but the text on the bar stays pinned white. chrome.css
+   owns that pinning.
+
+   With no rank 1 there is no band, and the same bar renders flat on the page:
+   page 2, /today before anything settles, an empty category board, and the
+   whole site before the first bid. Clear glass over nothing is a grey slab on a
+   white page and an invisible one on a black page, which is what shipped. Flat,
+   the bar is a raised well like the pager, in both themes.
+
+   The four tokens are the entire difference, so this file names backdrop-filter
+   in exactly the two places it always did and neither home branches. */
 .bidbar {
   position: relative;
   border-radius: var(--r-3);
-  background: var(--glass-clear-bg);
-  -webkit-backdrop-filter: var(--glass-clear-filter);
-          backdrop-filter: var(--glass-clear-filter);
-  /* The one drop shadow on the site. It is not card chrome: the bar physically
-     overhangs the screenshot band by 84px and without a shadow it reads as a
-     hole cut in the artwork rather than a pane in front of it. */
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+  background: var(--bid-surface);
+  -webkit-backdrop-filter: var(--bid-filter);
+          backdrop-filter: var(--bid-filter);
+  box-shadow: var(--bid-shadow);
 }
 
 .bidbar::before {
@@ -119,8 +126,28 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--glass-clear-dim);
+  background: var(--bid-dim);
   z-index: -1;
+}
+
+/* Over the band. The drop shadow is the one on the site and it is not card
+   chrome: the bar physically overhangs the artwork by 84px, and without it the
+   bar reads as a hole cut in the screenshots rather than a pane in front of
+   them. */
+.spotlight .bidbar {
+  --bid-surface: var(--glass-clear-bg);
+  --bid-filter:  var(--glass-clear-filter);
+  --bid-dim:     var(--glass-clear-dim);
+  --bid-shadow:  0 28px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Flat on the page. No blur to sample, nothing to dim, nothing to overhang, so
+   the rule is an inset hairline rather than a shadow. */
+.bidwrap.is-flat .bidbar {
+  --bid-surface: var(--bg-raised);
+  --bid-filter:  none;
+  --bid-dim:     transparent;
+  --bid-shadow:  inset 0 0 0 1px var(--hairline);
 }
 
 /* ---- popover -------------------------------------------------------------
@@ -158,10 +185,9 @@
     -webkit-mask-image: none;
             mask-image: none;
   }
-  .bidbar {
-    background: var(--glass-clear-solid);
-    -webkit-backdrop-filter: none;
-            backdrop-filter: none;
+  .spotlight .bidbar {
+    --bid-surface: var(--glass-clear-solid);
+    --bid-filter:  none;
   }
 }
 
@@ -187,10 +213,9 @@
     -webkit-backdrop-filter: none;
             backdrop-filter: none;
   }
-  .bidbar {
-    background: var(--glass-clear-solid);
-    -webkit-backdrop-filter: none;
-            backdrop-filter: none;
+  .spotlight .bidbar {
+    --bid-surface: var(--glass-clear-solid);
+    --bid-filter:  none;
   }
 }
 
