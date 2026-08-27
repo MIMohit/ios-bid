@@ -139,7 +139,7 @@ export function SpotlightPanel({
             <button
               type="button"
               className="spot-claim"
-              onClick={() => claimRank(row.priceToTake, 1)}
+              onClick={() => claimRank(row.priceToTake)}
             >
               claim this rank for {money(row.priceToTake)}
             </button>

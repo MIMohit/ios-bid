@@ -1,10 +1,13 @@
 import { useState } from "react";
+import type { FunctionReturnType } from "convex/server";
+import type { api } from "@convex/_generated/api";
 import { MAX_BID, MIN_BID } from "@convex/rules";
 import { money } from "~/lib/format";
 
 /**
  * The step grows with the amount, because +$1 on a $17,000 bid is a control
- * that does nothing.
+ * that does nothing. It is the fallback: wherever the board offers a rung, the
+ * stepper lands on that instead.
  */
 function stepFor(amount: number): number {
   if (amount >= 10_000) return 100;
@@ -13,8 +16,16 @@ function stepFor(amount: number): number {
   return 1;
 }
 
+/** The three amounts around the current place, from `api.board.place`. */
+type Ladder = Pick<
+  FunctionReturnType<typeof api.board.place>,
+  "floor" | "cheaper" | "dearer"
+>;
+
 type Props = {
   value: number;
+  /** Undefined until the board answers, and null-filled where there is no rung. */
+  ladder: Ladder | undefined;
   /** Always a whole dollar figure inside the rules' bounds. */
   onChange: (next: number) => void;
 };
@@ -23,7 +34,7 @@ type Props = {
  * The amount control: minus, the figure, plus.
  *
  * The figure is an input, not a label. The rules say the bidder names any whole
- * dollar amount and that amount alone decides the rank, so stepping from $5 to
+ * dollar amount and that amount alone decides the rank, so stepping from $1 to
  * $17,005 has to be typeable; the steppers are for nudging past the row you are
  * aiming at.
  *
@@ -42,11 +53,29 @@ type Props = {
  * stated under the field and restated in the quote line, and blur reformats the
  * draft away so the field never sits on a figure that is not the charge.
  */
-export function AmountStepper({ value, onChange }: Props) {
+export function AmountStepper({ value, ladder, onChange }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
 
+  /**
+   * The steppers walk the board's own ladder, because that is the only place a
+   * dollar changes anything: minus trims a #1 price of $17,005 to the $17,001
+   * that still holds #1, then drops to the cheapest amount that holds #2. Where
+   * the board has no rung to offer, above #1 or past the depth it will name, it
+   * falls back to a plain dollar step.
+   */
+  const rung = (direction: -1 | 1) => {
+    if (direction === 1) return ladder?.dearer;
+    if (ladder?.floor != null && value > ladder.floor) return ladder.floor;
+    return ladder?.cheaper;
+  };
+
   const step = (direction: -1 | 1) =>
-    onChange(Math.min(MAX_BID, Math.max(MIN_BID, value + direction * stepFor(value))));
+    onChange(
+      Math.min(
+        MAX_BID,
+        Math.max(MIN_BID, rung(direction) ?? value + direction * stepFor(value)),
+      ),
+    );
 
   return (
     <div className="stepper">

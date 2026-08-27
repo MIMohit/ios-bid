@@ -133,7 +133,7 @@ function Row({ row, clicks, leader }: Props) {
           type="button"
           className="claim"
           aria-label={`Claim rank ${row.rank} for ${price}`}
-          onClick={() => claimRank(row.priceToTake, row.rank)}
+          onClick={() => claimRank(row.priceToTake)}
         >
           <span className="claim-prefix">claim for </span>
           {price}

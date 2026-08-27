@@ -54,6 +54,11 @@ export const Route = createFileRoute("/category/$slug/")({
       ),
       context.queryClient.ensureQueryData(convexQuery(api.categories.totals, {})),
       context.queryClient.ensureQueryData(convexQuery(api.stats.strip, {})),
+      // The bid bar opens on the rounded price of #1. Warming the ladder under
+      // it here is what makes the first press of a stepper land on a rung.
+      context.queryClient.ensureQueryData(
+        convexQuery(api.board.place, { window: "all", categorySlug: params.slug, amount: null }),
+      ),
       context.queryClient.ensureQueryData(convexQuery(api.bids.recentActivity, {})),
       context.queryClient.ensureQueryData(
         convexQuery(api.board.podium, { window: "today", categorySlug: params.slug }),
@@ -145,10 +150,10 @@ function CategoryBoard() {
       <main>
         {top ? (
           <SpotlightPanel row={top} clicks={clicks[top.id] ?? 0}>
-            <BidBar priceForTop={board.priceForTop} />
+            <BidBar priceForTop={board.priceForTop} categorySlug={slug} />
           </SpotlightPanel>
         ) : (
-          <BidBar priceForTop={board.priceForTop} flat />
+          <BidBar priceForTop={board.priceForTop} categorySlug={slug} flat />
         )}
 
         <div className="page shell">

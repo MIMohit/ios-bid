@@ -52,6 +52,48 @@ test("a replayed webhook settles exactly once", async () => {
 });
 
 /**
+ * A dollar is a real bid. The heading advertises the top bid rounded up to the
+ * next $5, but the board underneath is priced in single dollars, and the amount
+ * alone decides the place. The ladder is what the amount control steps along:
+ * `floor` still holds the place, `cheaper` is the next place down, `dearer` the
+ * next place up.
+ */
+test("a dollar is a real bid, and the board names the place it buys", async () => {
+  const t = convexTest(schema, modules);
+
+  for (const [appId, slug, amount] of [
+    ["1", "alpha", 100],
+    ["2", "beta", 40],
+  ] as const) {
+    await t.mutation(internal.bids.settle, {
+      bidId: await t.mutation(internal.bids.createPending, {
+        appId,
+        amount,
+        snapshot: app(appId, slug),
+      }),
+    });
+  }
+  const place = (amount: number) => t.query(api.board.place, { window: "all", amount });
+
+  // $105 on the heading, not $101, but $101 buys the same #1 and the minus
+  // control walks straight to it.
+  expect((await t.query(api.board.page, { window: "all", page: 1 })).priceForTop).toBe(105);
+  expect(await place(105)).toEqual({ rank: 1, floor: 101, cheaper: 41, dearer: null });
+  expect(await place(101)).toEqual({ rank: 1, floor: 101, cheaper: 41, dearer: null });
+
+  // Matching the top bid does not pass it, so $100 is #2, not an error.
+  expect(await place(100)).toEqual({ rank: 2, floor: 41, cheaper: 1, dearer: 101 });
+
+  // And a single dollar lands at the bottom rather than being refused.
+  expect(await place(1)).toEqual({ rank: 3, floor: 1, cheaper: null, dearer: 41 });
+  expect(await t.query(api.bids.quote, { appId: "3", amount: 1 })).toMatchObject({
+    newTotal: 1,
+    charge: 1,
+    isRaise: false,
+  });
+});
+
+/**
  * Equal bids keep placement order: the older bid holds the higher rank. This
  * fails the moment anyone drops `negFirstBidAt`, because Convex indexes are
  * single-direction and a plain desc order on totalBid would tiebreak newest

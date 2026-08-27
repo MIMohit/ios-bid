@@ -6,10 +6,11 @@
  * state would re-render all fifty rows on the site's primary interaction, so it
  * lives here and only the form subscribes.
  *
- * Two fields. `amount` is null until the visitor asks for a specific number, so
- * the form can fall back to the live "claim #1" price without this module ever
- * knowing what that price is. `rank` is which row was claimed, which is what the
- * hero label reads back.
+ * One number. It is null until the visitor asks for a specific amount, so the
+ * form can fall back to the live "claim #1" price without this module ever
+ * knowing what that price is. The rank the amount buys is deliberately NOT
+ * stored: the board is the only authority on what a number buys, and
+ * `api.board.place` reads it back live.
  */
 import { useSyncExternalStore } from "react";
 import { MAX_BID, MIN_BID } from "@convex/rules";
@@ -21,12 +22,10 @@ import { MAX_BID, MIN_BID } from "@convex/rules";
 export const BID_FORM_ID = "bid";
 export const BID_INPUT_ID = "bid-app";
 
-export type BidPrefill = { amount: number | null; rank: number | null };
-
 // Module state on the server is per process, not per request. Nothing below is
 // ever called during render or from a loader, only from browser event handlers,
 // so no request can observe another request's value.
-let prefill: BidPrefill = { amount: null, rank: null };
+let amount: number | null = null;
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void): () => void {
@@ -34,22 +33,22 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-function snapshot(): BidPrefill {
-  return prefill;
+function snapshot(): number | null {
+  return amount;
 }
 
 /** Whole dollars, inside the rules' bounds. The server revalidates regardless. */
-export function setBidAmount(amount: number, rank: number | null = null): void {
-  const clamped = Math.min(MAX_BID, Math.max(MIN_BID, Math.round(amount)));
-  if (prefill.amount === clamped && prefill.rank === rank) return;
-  prefill = { amount: clamped, rank };
+export function setBidAmount(next: number): void {
+  const clamped = Math.min(MAX_BID, Math.max(MIN_BID, Math.round(next)));
+  if (amount === clamped) return;
+  amount = clamped;
   for (const listener of listeners) listener();
 }
 
 /** Back to "whatever taking #1 costs right now". */
 export function clearBidAmount(): void {
-  if (prefill.amount === null && prefill.rank === null) return;
-  prefill = { amount: null, rank: null };
+  if (amount === null) return;
+  amount = null;
   for (const listener of listeners) listener();
 }
 
@@ -58,12 +57,12 @@ export function clearBidAmount(): void {
  * form. This is the "pay according to the place" interaction, so it is a real
  * state change plus a focus move, not a scroll to an anchor.
  */
-export function claimRank(amount: number, rank: number): void {
-  setBidAmount(amount, rank);
+export function claimRank(price: number): void {
+  setBidAmount(price);
   document.getElementById(BID_FORM_ID)?.scrollIntoView({ block: "center" });
   document.getElementById(BID_INPUT_ID)?.focus({ preventScroll: true });
 }
 
-export function useBidPrefill(): BidPrefill {
+export function useBidAmount(): number | null {
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }

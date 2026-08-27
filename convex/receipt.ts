@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { counter } from "./clicks";
-import { MIN_BID, TOP_STEP, priceToTake } from "./rules";
+import { priceForTop, priceToTake } from "./rules";
 
 /**
  * The data behind /r/:slug, the share target a buyer posts after paying.
@@ -53,7 +53,7 @@ export const forSlug = query({
     const above = [...outbid, ...matched];
     const rank = above.length + 1;
 
-    // The GLOBAL top bid, which is what makes taking #1 cost the +$5 step.
+    // The GLOBAL top bid, which is what rounds the price of #1 up to the next $5.
     // `outbid` already holds every listing above this one, so it is free.
     const topBid = outbid.reduce((max, other) => Math.max(max, other.totalBid), l.totalBid);
 
@@ -89,7 +89,7 @@ export const forSlug = query({
       leader: !above.some((other) => other.categorySlug === l.categorySlug),
       clicks: await counter.count(ctx, l._id),
       /** For the bid bar on the receipt: what taking the whole board costs right now. */
-      priceForTop: Math.max(MIN_BID, topBid + TOP_STEP),
+      priceForTop: priceForTop(topBid),
     };
   },
 });

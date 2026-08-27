@@ -46,6 +46,11 @@ export const Route = createFileRoute("/")({
         convexQuery(api.board.page, { window: "all", page: deps.page }),
       ),
       context.queryClient.ensureQueryData(convexQuery(api.stats.strip, {})),
+      // The bid bar opens on the rounded price of #1. Warming the ladder under
+      // it here is what makes the first press of a stepper land on a rung.
+      context.queryClient.ensureQueryData(
+        convexQuery(api.board.place, { window: "all", amount: null }),
+      ),
       context.queryClient.ensureQueryData(convexQuery(api.bids.recentActivity, {})),
       context.queryClient.ensureQueryData(convexQuery(api.board.podium, { window: "today" })),
       context.queryClient.ensureQueryData(convexQuery(api.categories.totals, {})),
