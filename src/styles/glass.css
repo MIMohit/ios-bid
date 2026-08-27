@@ -1,0 +1,205 @@
+/* ===========================================================================
+   Materials.
+
+   Two Liquid Glass surfaces exist on this site and no more:
+
+     .chrome::before   the sticky header, one per route
+     .bidbar           the bid bar, and only where it floats over the #1
+                       screenshot band
+
+   Those are the only two selectors in the entire codebase that may name
+   backdrop-filter. Everything else that wants to look "lifted" gets the raised
+   well (a solid --bg-raised layer) plus a hairline, which costs nothing.
+
+   backdrop-filter is BANNED on rows, rail items, ticker items, dividers, icons,
+   hover states and focus states. A blurred surface forces the compositor to
+   re-read and re-filter everything behind it on every frame it is dirty, so the
+   cost scales with the surface count, not the surface size.
+
+   Every material has a per-theme treatment. Dark glass is a light film over
+   black; light glass is a white film over content. A single alpha reads as
+   dirty grey in one of the two, so the alphas, the filters and the rims are all
+   token-driven and both palettes carry their own.
+   =========================================================================== */
+
+/* ---- the rim -------------------------------------------------------------
+   What actually makes glass read as glass: a 1px gradient border, bright at the
+   top edge where light would catch it, gone by the bottom. A gradient border
+   with no extra element and no repaint. */
+.rim { position: relative; }
+.rim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--rim-top) 0%, var(--rim-mid) 38%, var(--rim-bottom) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+/* ---- chrome --------------------------------------------------------------
+   The sticky header. It carries its own scroll edge effect in the same
+   element: 52px of material, then a 14px band where the material and its blur
+   fade out, so content dissolves into the chrome instead of being cut by a
+   line. One composited surface, no second blurred layer, and the fade is a
+   static mask, never a scroll-linked animation.
+
+   brightness() inside the filter is the literal translation of Apple's "blurs
+   and adjusts the luminosity of background content". Without it a saturated app
+   icon scrolling under the header glows through and eats the wordmark. */
+.chrome {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 52px;
+  isolation: isolate;
+}
+
+.chrome::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -14px 0;
+  background: var(--glass-chrome-bg);
+  -webkit-backdrop-filter: var(--glass-chrome-filter);
+          backdrop-filter: var(--glass-chrome-filter);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0 52px, transparent 66px);
+          mask-image: linear-gradient(to bottom, #000 0 52px, transparent 66px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* On a top-docked bar the rim lives on the bottom edge: the top edge is
+   off-screen, so .rim would spend its gradient where nobody can see it. */
+.chrome::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52px;
+  height: 1px;
+  background: var(--hairline);
+  pointer-events: none;
+}
+
+.chrome-in {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ---- clear glass ---------------------------------------------------------
+   The bid bar, floating over the #1 app's screenshot band. This is the Clear
+   variant: far less tint than the chrome, so the artwork reads through it.
+   Apple's rule is that Clear requires a dimming layer beneath it, which is what
+   --glass-clear-dim on ::before provides; without it the white form labels sit
+   on whatever colour the screenshot happens to be.
+
+   In the light theme the band underneath stays photographic and dark, so the
+   film lightens but the text on the bar stays white. That is why .bidbar pins
+   its own text colours rather than reading --label. */
+.bidbar {
+  position: relative;
+  border-radius: var(--r-3);
+  background: var(--glass-clear-bg);
+  -webkit-backdrop-filter: var(--glass-clear-filter);
+          backdrop-filter: var(--glass-clear-filter);
+  /* The one drop shadow on the site. It is not card chrome: the bar physically
+     overhangs the screenshot band by 84px and without a shadow it reads as a
+     hole cut in the artwork rather than a pane in front of it. */
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+}
+
+.bidbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-clear-dim);
+  z-index: -1;
+}
+
+/* ---- popover -------------------------------------------------------------
+   Menus and the category select surface. Deliberately SOLID: the glass budget
+   is two surfaces and both are spent above. A popover is transient and sits
+   over content the user is not reading, so an opaque material loses nothing and
+   costs nothing. It keeps the rim so it belongs to the same family. */
+.popover {
+  background: var(--popover-solid);
+  border-radius: var(--r-2);
+  border: 1px solid var(--hairline);
+}
+
+/* ===========================================================================
+   Accessibility and capability overrides.
+
+   Every rule below targets one of the same two selectors. The blur is removed
+   and the geometry is untouched, so nothing moves when a fallback engages.
+   =========================================================================== */
+
+/* The weakest hardware never renders a blur: on mobile the header is solid. */
+@media (max-width: 768px) {
+  .chrome::before {
+    background: var(--chrome-solid);
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (update: slow) {
+  .chrome::before {
+    background: var(--chrome-solid);
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+  .bidbar {
+    background: var(--glass-clear-solid);
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+  }
+}
+
+/* More contrast means less material: the rim and the hairlines carry the edges
+   instead of the blur. Both palettes get their own lift, since raising a white
+   rim on a white page does nothing. */
+@media (prefers-contrast: more) {
+  :root {
+    --hairline:        rgba(60, 60, 67, 0.34);
+    --hairline-strong: rgba(60, 60, 67, 0.52);
+    --rim-top:         rgba(0, 0, 0, 0.24);
+    --rim-mid:         rgba(0, 0, 0, 0.12);
+  }
+  :root[data-theme="dark"] {
+    --hairline:        rgba(255, 255, 255, 0.20);
+    --hairline-strong: rgba(255, 255, 255, 0.34);
+    --label-3:         rgba(235, 235, 245, 0.72);
+    --rim-top:         rgba(255, 255, 255, 0.42);
+    --rim-mid:         rgba(255, 255, 255, 0.24);
+  }
+  .chrome::before {
+    background: var(--chrome-solid);
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+  }
+  .bidbar {
+    background: var(--glass-clear-solid);
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --hairline:        rgba(255, 255, 255, 0.20);
+    --hairline-strong: rgba(255, 255, 255, 0.34);
+    --label-3:         rgba(235, 235, 245, 0.72);
+    --rim-top:         rgba(255, 255, 255, 0.42);
+    --rim-mid:         rgba(255, 255, 255, 0.24);
+  }
+}

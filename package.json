@@ -2,43 +2,56 @@
   "name": "iosbid",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "lint": "next lint",
-    "db:up": "docker compose up -d",
-    "db:down": "docker compose down",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
+    "dev": "vite dev",
+    "dev:convex": "convex dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "stripe:listen": "stripe listen --forward-to $VITE_CONVEX_SITE_URL/stripe"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
-    "next": "^16.3.2",
-    "pg": "^8.23.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "stripe": "^22.5.0"
+    "@convex-dev/react-query": "0.1.0",
+    "@convex-dev/sharded-counter": "0.2.1",
+    "@tanstack/react-query": "5.102.3",
+    "@tanstack/react-router": "1.170.32",
+    "@tanstack/react-router-ssr-query": "1.167.1",
+    "@tanstack/react-start": "1.168.49",
+    "convex": "1.45.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "satori": "0.33.3",
+    "sharp": "0.35.3",
+    "stripe": "22.5.0",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.2.0",
-    "@types/pg": "^8.23.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
-    "dotenv": "^17.4.2",
-    "prisma": "^7.9.1",
-    "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
+    "@edge-runtime/vm": "5.0.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@tanstack/react-router-devtools": "1.167.1",
+    "@types/node": "26.3.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "6.1.0",
+    "convex-test": "0.0.56",
+    "nitro": "3.0.260610-beta",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
   },
-  "allowScripts": {
-    "prisma@7.9.1": true,
-    "@prisma/engines@7.9.1": true,
-    "esbuild@0.28.2": true,
-    "fsevents@2.3.3": true
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ],
+    "patchedDependencies": {
+      "@tanstack/router-ssr-query-core@1.169.1": "patches/@tanstack__router-ssr-query-core@1.169.1.patch"
+    }
   }
 }

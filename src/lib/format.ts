@@ -1,3 +1,10 @@
+/**
+ * Display formatting, shared by every component. Ported from the Next.js tree
+ * with the timestamp helpers widened to accept a ms epoch, because Convex
+ * stores every date as a number.
+ */
+
+/** Whole dollars only. This function must never emit a decimal point. */
 export function money(dollars: number): string {
   return "$" + dollars.toLocaleString("en-US");
 }
@@ -8,13 +15,21 @@ export function compact(n: number): string {
   return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
 }
 
-/** "3 minutes ago", "yesterday", "2 days ago" — matching the board's voice. */
-export function ago(date: Date | string): string {
-  const then = typeof date === "string" ? new Date(date) : date;
-  const seconds = Math.max(1, Math.floor((Date.now() - then.getTime()) / 1000));
+type Timestamp = Date | string | number;
+
+function toMs(at: Timestamp): number {
+  return typeof at === "number" ? at : new Date(at).getTime();
+}
+
+/** "3 minutes ago", "yesterday", "2 days ago". The board's voice. */
+export function ago(at: Timestamp): string {
+  const seconds = Math.max(1, Math.floor((Date.now() - toMs(at)) / 1000));
 
   if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+  if (seconds < 3600) {
+    const m = Math.floor(seconds / 60);
+    return `${m} ${m === 1 ? "minute" : "minutes"} ago`;
+  }
   if (seconds < 86400) {
     const h = Math.floor(seconds / 3600);
     return `${h} ${h === 1 ? "hour" : "hours"} ago`;
@@ -27,10 +42,36 @@ export function ago(date: Date | string): string {
   return `${Math.floor(months / 12)}y ago`;
 }
 
-export function rating(value: number | null): string {
-  return value ? value.toFixed(1) : "—";
+/**
+ * "6 days", "3 hours". How long the current holder has held the slot.
+ *
+ * Reads the clock at render, so the server's string and the client's differ
+ * whenever hydration lands on the other side of a minute. That is guaranteed
+ * rather than unlikely: the board is served with `s-maxage=15,
+ * stale-while-revalidate=300`, so most visitors hydrate HTML that is minutes
+ * old. Every element rendering this or `hoursSince` therefore carries
+ * `suppressHydrationWarning`, which keeps the server's text instead of throwing
+ * the whole board away and re-rendering it on the client.
+ */
+export function held(since: Timestamp): string {
+  const seconds = Math.max(1, Math.floor((Date.now() - toMs(since)) / 1000));
+  if (seconds < 3600) {
+    const m = Math.max(1, Math.floor(seconds / 60));
+    return `${m} ${m === 1 ? "minute" : "minutes"}`;
+  }
+  if (seconds < 86400) {
+    const h = Math.floor(seconds / 3600);
+    return `${h} ${h === 1 ? "hour" : "hours"}`;
+  }
+  const d = Math.floor(seconds / 86400);
+  return `${d} ${d === 1 ? "day" : "days"}`;
 }
 
-export function hoursSince(date: Date): number {
-  return Math.floor((Date.now() - date.getTime()) / 3_600_000);
+/** Apple's averageUserRating is optional. "-" is the placeholder, never "0.0". */
+export function rating(value: number | null | undefined): string {
+  return value ? value.toFixed(1) : "-";
+}
+
+export function hoursSince(at: Timestamp): number {
+  return Math.floor((Date.now() - toMs(at)) / 3_600_000);
 }

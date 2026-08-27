@@ -1,0 +1,779 @@
+/* ===========================================================================
+   The board.
+
+   One grid, four content columns, one money column that never moves. The whole
+   page's hierarchy is carried by scale alone: icon size, type size, type weight
+   and row height. No rank anywhere gets a tint, a border, a card, a pill, a
+   glow or a badge. That restraint IS the design, so if a rank ever needs a box
+   to be legible, the scale ladder is wrong, not the ban.
+
+   Nothing in this file may blur its backdrop. Those two surfaces, and the
+   rule behind the limit, live in glass.css.
+   =========================================================================== */
+
+/* ---- the squircle --------------------------------------------------------
+   Apple's icon shape is a continuous corner curve, not a rounded rectangle, and
+   a border-radius is visibly wrong sitting next to real App Store artwork. One
+   shared <clipPath> is rendered once in __root.tsx (Squircle.tsx) and
+   referenced by all fifty icons, so the geometry is parsed once per document
+   and there is no per-icon mask image to decode.
+
+   Icons never animate. A clip is a paint-time operation cached in the tile:
+   free while static, expensive if it has to re-rasterise every frame. Row
+   feedback lives on the row background, never on the icon. */
+.icon {
+  position: relative;
+  flex: none;
+  width: var(--icon-size, var(--tier0-icon));
+  aspect-ratio: 1;
+  border-radius: var(--r-icon);   /* the fallback shape if clip-path fails */
+  background: var(--bg-raised);   /* holds the shape while the image loads */
+}
+
+.icon > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  clip-path: url(#sq);
+}
+
+/* The inner stroke is required, not decoration: a white App Store icon
+   dissolves into #000 at its own corners without it. It lives on a sibling
+   pseudo-element carrying the same clip, because a clip removes the element's
+   own inset shadow. */
+.icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  clip-path: url(#sq);
+  box-shadow: inset 0 0 0 1px var(--icon-ring);
+  pointer-events: none;
+}
+
+/* Cheapest path where it exists: no clip at all. */
+@supports (corner-shape: squircle) {
+  .icon,
+  .icon > img,
+  .icon::after {
+    corner-shape: squircle;
+    border-radius: var(--r-icon);
+    clip-path: none;
+  }
+}
+
+/* ---- the row -------------------------------------------------------------
+   The three gaps differ (12 / 14 / 16) so they are baked into the track list:
+   one declaration, no per-cell margins to keep in sync. The tier classes below
+   change only --rank-track and --icon-size, so the money column stays pinned at
+   128px on every tier and the dollar figures form a vertical rule down the
+   whole board. That is what makes the ramp read as one board and not as four. */
+.board { position: relative; }
+
+.row {
+  /* tier 0, the canonical row. The tier classes override these four. */
+  --icon-size:  var(--tier0-icon);
+  --row-title:  var(--tier0-title);
+  --row-lead:   var(--tier0-lead);
+  --row-price:  var(--tier0-price);
+  --row-h:      var(--tier0-row);
+  --rank-size:  13px;
+  --rank-track: 40px;
+
+  display: grid;
+  grid-template-columns: var(--rank-track) 12px var(--icon-size) 14px minmax(0, 1fr) 16px 128px;
+  align-items: center;
+  /* min-height, not height: above 200% text scaling the row is allowed to grow
+     rather than clip its own name. */
+  min-height: var(--row-h);
+  padding-block: 7px;
+  padding-inline: 12px;
+  margin-inline: -12px;
+  border-bottom: 1px solid var(--hairline);
+  position: relative;
+  /* Skips layout, paint and the icon clip for every off-screen row. The
+     intrinsic size must match the real row height or scrolling judders as rows
+     enter, so it reads the same token the row does. It sizes the CONTENT box
+     though, while --row-h is the border-box min-height, so the row's own
+     padding-block and border come back off. Without the subtraction every
+     unrendered row stands 15px too tall and the page shrinks under the
+     scrollbar as they paint. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto calc(var(--row-h) - 15px);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+.row:hover  { background: var(--fill-hover); }
+.row:active { background: var(--fill-press); }
+
+/* ---- the graduated rank ramp ---------------------------------------------
+   PURE SCALE. Read the ladder in tokens.css: row height is icon + 24 at every
+   step, so each tier lands on the 4px board grid and the icon keeps a constant
+   12px inset. In direction C rank #1 is the spotlight panel, so .is-t1 is here
+   for the boards that have no panel (a category board, /today) and for nothing
+   else. #2 and #3 step down visibly toward #4 and the transition into the
+   uniform row reads as deliberate rather than as a rendering fault. */
+.row.is-t1 { --icon-size: var(--tier1-icon); --row-title: var(--tier1-title); --row-lead: var(--tier1-lead); --row-price: var(--tier1-price); --row-h: var(--tier1-row); --rank-size: 34px; --rank-track: 52px; }
+.row.is-t2 { --icon-size: var(--tier2-icon); --row-title: var(--tier2-title); --row-lead: var(--tier2-lead); --row-price: var(--tier2-price); --row-h: var(--tier2-row); --rank-size: 24px; --rank-track: 48px; }
+.row.is-t3 { --icon-size: var(--tier3-icon); --row-title: var(--tier3-title); --row-lead: var(--tier3-lead); --row-price: var(--tier3-price); --row-h: var(--tier3-row); --rank-size: 20px; --rank-track: 44px; }
+
+/* Two heavier rules bracket the podium. That is the whole grouping treatment:
+   nothing is enclosed. */
+.row.is-t1 { border-top: 1px solid var(--hairline-strong); }
+.row.is-t3 { border-bottom: 1px solid var(--hairline-strong); }
+
+/* ---- column 1, rank ------------------------------------------------------
+   One step above meta size even on tier 0: the rank is the row's index and has
+   to be findable while scanning. The "#" is part of the text node, not a
+   pseudo-element, so "#42" copies to the clipboard correctly. */
+.rank {
+  grid-column: 1;
+  text-align: right;
+  font-size: var(--rank-size);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.006em;
+  color: var(--label-3);
+}
+.row.is-t1 .rank { color: var(--label); letter-spacing: -0.032em; }
+.row.is-t2 .rank { color: var(--label); letter-spacing: -0.028em; }
+.row.is-t3 .rank { color: var(--label-2); letter-spacing: -0.026em; }
+
+.row > .icon  { grid-column: 3; }
+.row > .money { grid-column: 7; }
+
+/* ---- column 3, the stack -------------------------------------------------
+   Three lines: name, subtitle, meta. container-type so the meta line can shed
+   fields by its own width rather than by the viewport's. */
+.stack {
+  grid-column: 5;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.name {
+  display: block;
+  font-size: var(--row-title);
+  font-weight: 600;
+  line-height: var(--row-lead);
+  letter-spacing: -0.014em;
+  color: var(--label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The whole row is the outbound link, because outbound links are the product.
+   The claim button is a sibling at a higher z-index, never a nested one: a
+   <button> inside an <a> is invalid and unreachable by keyboard. */
+.name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.sub {
+  font-size: 13px;
+  line-height: 17px;
+  letter-spacing: -0.006em;
+  color: var(--label-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.meta {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.meta > * + *::before {
+  content: "\00b7";
+  margin: 0 6px;
+  color: var(--label-4);
+}
+
+/* White inside a --label-3 line is emphasis without spending a hue, so the
+   accent stays exclusively money-as-text. The click count gets the same
+   promotion: it is the number that makes the next bidder pay. */
+.m-cat.is-leader { color: var(--label); font-weight: 600; }
+.m-clicks        { color: var(--label); font-weight: 600; }
+.star { color: var(--label-2); margin-right: 3px; font-size: 10.5px; vertical-align: 0.5px; }
+
+/* Accent-as-mark: the 5px dot in front of "#1 in Games". */
+.lead-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+/* Truncation order, dropping from the right. The leader marker and the click
+   count never drop. */
+@container (max-width: 520px) { .m-price  { display: none; } }
+@container (max-width: 440px) { .m-age    { display: none; } }
+@container (max-width: 360px) { .m-rating { display: none; } }
+@container (max-width: 300px) { .m-dev    { display: none; } }
+
+/* ---- column 4, money and CTA ---------------------------------------------
+   Fixed at 128px on every tier. The slot is reserved whether or not anything is
+   in it, which is why hover costs zero layout shift, and it is what turns the
+   dollar figures into a vertical rule. */
+.money {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 1;
+}
+
+.bid {
+  font-size: var(--row-price);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  color: var(--accent);
+}
+
+/* Visible on every row at every breakpoint, never hover-revealed. The hit area
+   is padded past the box to roughly 26px x 112px on desktop. The full phrase
+   lives in aria-label; at 11px in 128px it would otherwise steal 40px from the
+   app name, which is where truncation actually hurts. */
+.claim {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: color 120ms cubic-bezier(0.2, 0, 0, 1),
+              background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.row:hover .claim { color: var(--label); }
+.claim:hover      { background: var(--fill-press); color: var(--label); }
+
+/* ---- board furniture -----------------------------------------------------
+   The TOP 10 / TOP 20 markers are chart axis labels, not section headings, so
+   they are the one place small tracked type is allowed. No pill, no fill. */
+.board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hairline-strong);
+}
+/* h1 as well as h2: the board is the only .board-head whose heading is an h2,
+   because the board is not the page. Every other one (/rules, /about, /stats,
+   /categories, /success, /r/:slug) carries the page's h1, and matching h2 alone
+   left all seven rendering at body size. */
+.board-head :is(h1, h2) { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.026em; }
+.board-head p  { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-3); }
+
+.marker { height: 28px; display: flex; align-items: center; gap: 12px; }
+.marker::before,
+.marker::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+.marker span { font-size: 10.5px; font-weight: 600; letter-spacing: 0.012em; color: var(--label-3); }
+
+/* "Nobody has bid yet. $5 takes #1." One line, no illustration, no card. */
+.empty {
+  padding-block: 56px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--label-2);
+}
+
+/* ---- activity tape -------------------------------------------------------
+   A static hairline strip that re-renders when Convex pushes. No marquee, no
+   auto-scroll, no fade cycling. A raised well, never glass. */
+.tape-wrap { border-bottom: 1px solid var(--hairline); }
+.tape {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;   /* fixed, so a tape that grows from empty cannot push ranks 4..50 */
+  margin-inline: -12px;
+  padding-inline: 12px;
+  background: var(--bg-raised);
+}
+.tape-label { flex: none; font-size: 11px; font-weight: 600; letter-spacing: 0.008em; color: var(--label-3); }
+.tape-label::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.tape-scroll {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 calc(100% - 40px), transparent 100%);
+          mask-image: linear-gradient(90deg, #000 0 calc(100% - 40px), transparent 100%);
+}
+.tape-scroll::-webkit-scrollbar { display: none; }
+.tape-item {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--label-3);
+  white-space: nowrap;
+  padding-inline: 14px;
+  border-left: 1px solid var(--hairline-faint);
+}
+.tape-item:first-child { border-left: 0; padding-left: 0; }
+.tape-item b  { color: var(--label-2); font-weight: 500; }
+.tape-item em { color: var(--accent); font-style: normal; }
+.tape-item i  { color: var(--label-4); font-style: normal; margin-left: 6px; }
+
+/* ---- pagination ----------------------------------------------------------
+   A raised well. Never blurred. */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 52px;
+  margin-top: 16px;
+  padding-inline: 12px;
+  margin-inline: -12px;
+  background: var(--bg-raised);
+  border-radius: var(--r-1);
+}
+.pager-count { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-3); }
+.pager-count b { color: var(--label); font-weight: 600; }
+.pager-nav { display: flex; align-items: center; gap: 4px; }
+.pg {
+  min-width: 30px;
+  height: 30px;
+  padding-inline: 9px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--label-2);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1),
+              color 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.pg:hover { background: var(--fill-hover); color: var(--label); }
+.pg[aria-current="page"] { background: var(--bg-raised-2); color: var(--label); font-weight: 600; }
+.pg[disabled] { color: var(--label-4); cursor: default; }
+.pg[disabled]:hover { background: none; color: var(--label-4); }
+
+/* ---- page shell and the category rail ------------------------------------
+   240 + 36 + 868 = 1144, which is exactly the content box at the 1200px page
+   width with 28px gutters. No slack, no sub-pixel columns. The board caps at
+   868px on any viewport so the bid amount never drifts a screen away from the
+   app name; extra width goes outside the page, not into the board.
+
+   27 categories x 30px = 810px against a max-height of 816px at a 900px
+   viewport: the entire category economy is legible without scrolling on a
+   laptop, which is the argument that drives second-tier bids. */
+.shell { padding-block: 36px 0; }
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 868px);
+    column-gap: 36px;
+    align-items: start;
+    justify-content: center;
+  }
+  .rail {
+    position: sticky;
+    top: 68px;   /* header 52 + 16 */
+    max-height: calc(100dvh - 84px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+
+.rail-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+.rail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 30px;
+  padding-inline: 10px;
+  margin-inline: -10px;
+  position: relative;
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.rail-item:hover { background: var(--fill-hover); }
+.rail-name {
+  font-size: 13px;
+  letter-spacing: -0.006em;
+  color: var(--label-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rail-sum { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-3); }
+.rail-item.is-active .rail-name { color: var(--label); font-weight: 600; }
+/* Accent-as-mark. A 2px bar in the gutter, flush to the container edge. No
+   fill, no radius, no pill. */
+.rail-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: var(--accent);
+}
+
+/* ===========================================================================
+   The #1 spotlight panel (direction C).
+
+   A fixed-height photographic band: the #1 app's own screenshots, one blurred
+   to fill the band and up to three shown at size in front of it, with the bid
+   bar's clear glass overhanging the bottom edge.
+
+   The band is a dark surface in BOTH themes, so it pins its own text ramp
+   rather than reading --label. Every degenerate case is handled by geometry
+   rather than by a branch in the component:
+
+     zero screenshots     .spot-bg has no <img>, .spot-shots is :empty and
+                          collapses. The gradients still paint a clean band at
+                          the same height, so nothing above or below moves.
+     landscape iPad shots explicit height plus object-fit: cover plus overflow
+                          hidden. An uncontrolled aspect ratio cannot reach the
+                          layout.
+     fewer than three     flex, so the band simply carries what exists.
+     more than three      the extras are clipped out; AppMeta stores up to six.
+   =========================================================================== */
+.spotlight {
+  position: relative;
+  padding-bottom: 30px;
+  /* the band's own ramp: white on artwork, in both themes */
+  --label:   #FFFFFF;
+  --label-2: rgba(235, 235, 245, 0.68);
+  --label-3: rgba(235, 235, 245, 0.52);
+  --accent:     #30D158;
+  --accent-ink: #000000;
+  --accent-press: #28BA4C;
+  --rim-top:    rgba(255, 255, 255, 0.20);
+  --rim-mid:    rgba(255, 255, 255, 0.06);
+  --rim-bottom: rgba(255, 255, 255, 0.02);
+  color: var(--label);
+}
+
+/* The band's own floor. It is painted rather than inherited so the surface is
+   the same dark in both themes and with or without artwork: without it the
+   zero-screenshot case falls through to the page, which is white in the light
+   theme, and white band text with it. */
+.spot-bg { position: absolute; inset: 0; overflow: hidden; background: var(--spot-edge); }
+
+/* One screenshot, blurred past recognition, as the band's colour field. A
+   static paint filter: it never animates, and it is dropped entirely when the
+   viewer asked for less transparency.
+
+   Desaturated and dimmed hard, because this is depth and not artwork. The
+   numbers are set against the worst artwork rather than against whatever app
+   holds #1 today: a white screenshot cannot raise the band past a dark grey,
+   and a fully saturated game icon cannot put a hue on it, so the white copy
+   and the green amount on the glass keep the same contrast on every app.
+
+   The mask pools what light there is behind the screenshots on the right. The
+   left two thirds, which is where every line of text in the band and most of
+   the bid bar sits, stays at the band's own floor. */
+.spot-ambient {
+  position: absolute;
+  inset: -14% -10%;
+  width: 120%;
+  height: 128%;
+  object-fit: cover;
+  object-position: 50% 34%;
+  filter: blur(64px) saturate(40%) brightness(0.62);
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(118% 96% at 76% 36%, #000 0%, rgba(0, 0, 0, 0.42) 50%, transparent 84%);
+          mask-image: radial-gradient(118% 96% at 76% 36%, #000 0%, rgba(0, 0, 0, 0.42) 50%, transparent 84%);
+}
+
+.spot-dim { position: absolute; inset: 0; background: var(--glass-clear-dim); }
+
+/* Two gradients, not a flat scrim: the band has to reach true --spot-edge at
+   its top and bottom or it reads as a pasted rectangle, and the left side has
+   to be dark enough to carry 11px meta text over any artwork. The horizontal
+   ramp is long and takes four stops rather than three, so the walk from the
+   text side into the lit side has no visible edge in it. */
+.spot-fade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, var(--spot-edge) 0%, rgba(0, 0, 0, 0) 16%, rgba(0, 0, 0, 0.10) 60%,
+                    rgba(0, 0, 0, 0.38) 86%, var(--spot-edge) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.44) 30%, rgba(0, 0, 0, 0.20) 56%,
+                    rgba(0, 0, 0, 0) 82%);
+}
+
+.spot-in {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 40px;
+  align-items: end;
+  padding-block: 34px 0;
+  min-height: 400px;   /* the band's fixed height, with or without artwork */
+}
+
+.spot-left { max-width: 600px; padding-bottom: 104px; }
+.spot-eyebrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.spot-rank { font-size: 34px; font-weight: 700; line-height: 36px; letter-spacing: -0.032em; }
+.spot-hold { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-2); }
+.spot-head { display: flex; gap: 16px; align-items: flex-start; }
+.spot-head .icon { --icon-size: var(--tier1-icon); }
+.spot-title { font-size: 28px; font-weight: 600; line-height: 32px; letter-spacing: -0.030em; }
+.spot-sub {
+  font-size: 13px;
+  line-height: 17px;
+  letter-spacing: -0.006em;
+  color: var(--label-2);
+  margin-top: 5px;
+  max-width: 44ch;
+}
+.spot-meta {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.008em;
+  color: var(--label-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.spot-meta > * + *::before { content: "\00b7"; margin: 0 7px; color: var(--label-4); }
+.spot-meta .is-leader { color: var(--label); font-weight: 600; }
+
+.spot-money { display: flex; align-items: flex-end; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
+.spot-bid {
+  font-size: clamp(40px, 5.5vw, 56px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.036em;
+  color: var(--accent);
+}
+.spot-clicks { font-size: 11px; font-weight: 500; letter-spacing: 0.008em; color: var(--label-2); padding-bottom: 4px; }
+.spot-clicks b { color: var(--label); font-weight: 600; }
+/* The one tinted commit control in the band. */
+.spot-claim {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  padding: 9px 16px;
+  border-radius: var(--r-1);
+  transition: background-color 90ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+.spot-claim:hover { background: var(--accent-press); }
+
+.spot-shots { display: flex; gap: 12px; margin-bottom: -26px; }
+.spot-shots:empty { display: none; }
+/* The bid bar's glass overhangs the bottom of these by roughly 70px, and a
+   screenshot read through blur(18px) saturate(180%) is where the orange and
+   purple smear on the bar came from. So each shot dissolves into the band
+   before it reaches the glass: what the bar samples is the band's own floor
+   plus the ambient, never App Store artwork at full chroma. It also ends the
+   hard horizontal cut where the bar crossed them. */
+.shot {
+  margin: 0;
+  width: 152px;
+  border-radius: 18px;
+  overflow: hidden;      /* the crop happens here, so nothing can escape the band */
+  position: relative;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  -webkit-mask-image: linear-gradient(180deg, #000 0 50%, rgba(0, 0, 0, 0.30) 74%, transparent 92%);
+          mask-image: linear-gradient(180deg, #000 0 50%, rgba(0, 0, 0, 0.30) 74%, transparent 92%);
+}
+.shot img {
+  width: 152px;
+  height: 304px;         /* explicit, so a landscape iPad shot cannot set the height */
+  object-fit: cover;
+  object-position: 50% 0;
+}
+.shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+/* AppMeta keeps up to six; the band shows three. */
+.shot:nth-child(n + 4) { display: none; }
+/* Staggered from the end, so one or two screenshots still land on the band's
+   baseline instead of floating above it. */
+.shot:nth-last-child(2) { margin-bottom: 22px; }
+.shot:nth-last-child(3) { margin-bottom: 44px; }
+
+/* The bid bar overhangs the band. z-index above .spot-in so the glass samples
+   the artwork rather than the page. */
+.bidwrap { position: relative; z-index: 2; margin-top: -84px; }
+
+/* The category cell in the bid bar. Apple decides the category, so the cell
+   states it instead of offering a disabled control that pretends otherwise.
+   Two short lines rather than one long one: the chrome.css track is 220px, and
+   180px below 1024px, and neither line comes close to filling it at any
+   viewport. The ellipsis is belt and braces for a genre name Apple has not
+   shipped yet. */
+.bid-cat {
+  align-self: center;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: -0.010em;
+  color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bid-cat > span {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.008em;
+  color: var(--label-3);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .spot-ambient { display: none; }
+}
+
+/* ===========================================================================
+   Responsive.
+   =========================================================================== */
+
+/* Below the two-column shell the rail becomes a horizontal scroll-snap strip.
+   Each chip keeps its dollar total: only the axis degrades, not the
+   information. Not a <select>, because the totals are the point. */
+@media (max-width: 1023px) {
+  .rail { margin-bottom: 20px; }
+  .rail-head { display: none; }
+  .rail ul {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    -webkit-mask-image: linear-gradient(90deg, #000 0 calc(100% - 32px), transparent 100%);
+            mask-image: linear-gradient(90deg, #000 0 calc(100% - 32px), transparent 100%);
+  }
+  .rail ul::-webkit-scrollbar { display: none; }
+  .rail li { scroll-snap-align: start; }
+  .rail-item {
+    height: 32px;
+    margin: 0;
+    padding-inline: 12px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-1);
+    white-space: nowrap;
+  }
+  .rail-item.is-active { border-color: var(--hairline-strong); }
+  .rail-item.is-active::before { display: none; }
+
+  .spot-in {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-block: 32px 20px;
+  }
+  .spot-left { padding-bottom: 0; }
+  .spot-shots {
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 0;
+  }
+  .spot-shots::-webkit-scrollbar { display: none; }
+  .shot:nth-last-child(2),
+  .shot:nth-last-child(3) { margin-bottom: 0; }
+  .bidwrap { margin-top: -40px; }
+}
+
+@media (max-width: 640px) {
+  /* At a 393px viewport: 393 - 32 gutters = 361, minus 8 row padding = 353 of
+     track. The tracks below take 22 + 10 + 44 + 12 + 12 + 84 = 184, leaving
+     169px for the name, roughly 21 characters at 15/600. Nothing is allowed to
+     take pixels from the name track, which is why the claim button drops its
+     words rather than its number. */
+  .row {
+    --rank-track: 22px;
+    grid-template-columns: var(--rank-track) 10px var(--icon-size) 12px minmax(0, 1fr) 12px 84px;
+    padding-inline: 4px;
+    margin-inline: -4px;
+  }
+  .row.is-t1,
+  .row.is-t2,
+  .row.is-t3 { --rank-track: 30px; }
+  .row .sub  { display: none; }     /* the subtitle is the first sacrifice */
+  .row .rank { font-size: 11px; }
+  .row.is-t1 .rank { font-size: 24px; }
+  .row.is-t2 .rank,
+  .row.is-t3 .rank { font-size: 17px; }
+  /* The claim hit area grows to the 44px iOS minimum. Hover does not exist
+     here, so the touch target is non-negotiable. */
+  .claim { padding-block: 15px; margin-block: -15px; }
+  .claim-prefix { display: none; }
+  .claim::before { content: "\2191\00a0"; }
+
+  .spot-shots { gap: 10px; }
+  .shot, .shot img { width: 124px; }
+  .shot img { height: 220px; }
+  .spot-in { min-height: 0; }
+  .board-head p { display: none; }
+}
+
+/* ---------------------------------------------------------------- prose --
+   /rules, /terms, /privacy, /about and the receipt's tail all carry .doc and
+   nothing styled it, so every heading rendered at body weight, paragraphs had
+   no rhythm, and lines ran to 160 characters. /terms is the surface the dispute
+   clause lives on and /rules is where the whole pricing model is explained, so
+   they have to be readable before anything else about them matters.
+   Reuses the existing label ramp; no new colours, no card, no chrome. */
+.doc { max-width: 68ch; padding-block: 20px 8px; }
+.doc section + section { margin-top: 20px; }
+.doc :is(h2, h3) {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--label);
+}
+.doc p { color: var(--label-2); line-height: 1.55; }
+.doc p + p { margin-top: 10px; }
+.doc :is(ul, ol) { margin: 8px 0 0; padding-left: 18px; color: var(--label-2); }
+.doc li + li { margin-top: 5px; }
+.doc a { color: var(--accent); text-decoration: none; }
+.doc a:hover { text-decoration: underline; }
