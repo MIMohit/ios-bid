@@ -777,3 +777,82 @@
 .doc li + li { margin-top: 5px; }
 .doc a { color: var(--accent); text-decoration: none; }
 .doc a:hover { text-decoration: underline; }
+
+/* The PostHog traffic embed on /stats. Fixed height because the frame reports
+   none, and a zero-height iframe collapses silently. It keeps its own light
+   chrome; boxing it in our border is honest about it being someone else's
+   surface rather than pretending it is part of the page. */
+.embed {
+  display: block;
+  width: 100%;
+  /* PostHog's dashboard is far taller than this. The frame scrolls internally,
+     so the height is a budget for how much page this borrowed surface gets
+     before the reader is better served by the full dashboard link above it. */
+  height: 720px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  margin-top: 12px;
+  background: #fff;
+}
+
+/* ------------------------------------------------------------------ stats --
+   /stats is the public dashboard the footer's "Live stats" points at, and it
+   shipped with no rules for .statgrid or .daily at all: the numbers ran into
+   their own labels ("0here right now") and the table rendered as bare rows.
+   Same omission as .doc had. Dense, hairlines only, no cards. */
+.statgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 1px;
+  margin: 16px 0 24px;
+  background: var(--hairline-faint);
+  border-block: 1px solid var(--hairline-faint);
+}
+.statgrid .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 14px 12px 0;
+  background: var(--bg);
+}
+.statgrid .stat b {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+}
+.statgrid .stat span { font-size: 11.5px; font-weight: 500; color: var(--label-3); }
+
+.daily { width: 100%; border-collapse: collapse; font-size: 13px; }
+/* Left aligned, above the table, because it is a sentence rather than a label.
+   Browsers centre a caption by default and it reads as a stray line of prose. */
+.daily caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--label-3);
+}
+.daily th, .daily td { padding: 7px 10px 7px 0; text-align: right; }
+.daily th[scope="col"] {
+  text-align: right;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.012em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  border-bottom: 1px solid var(--hairline-strong);
+}
+.daily th[scope="col"]:first-child, .daily th[scope="row"] { text-align: left; }
+.daily th[scope="row"] { font-weight: 500; color: var(--label-2); font-variant-numeric: tabular-nums; }
+.daily td { color: var(--label); font-variant-numeric: tabular-nums; }
+.daily tbody tr { border-bottom: 1px solid var(--hairline-faint); }
+.daily tbody tr:last-child { border-bottom: 0; }
+
+/* The traffic section breaks out of .doc's 68ch reading measure. That measure
+   is right for legal prose and wrong for a dashboard, which was rendering at
+   567px inside a 1144px page. */
+.doc.wide { max-width: none; }
