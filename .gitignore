@@ -16,6 +16,11 @@ src/routeTree.gen.ts
 .vite
 .env*
 
+# leftovers from the Next.js tree this was rewritten from
+.next
+src/generated
+next-env.d.ts
+
 # playwright output
 test-results
 playwright-report
