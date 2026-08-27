@@ -81,7 +81,7 @@ export async function trackEdge<P extends keyof EdgeBody>(path: P, body: EdgeBod
   try {
     await fetch(convexSiteUrl() + path, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-iosbid-edge": secret },
+      headers: { "content-type": "application/json", "x-iosrank-edge": secret },
       body: JSON.stringify(body),
     });
   } catch (error) {

@@ -21,9 +21,9 @@ const searchSchema = z.object({ session_id: z.string().catch("") });
  * a board where the buyer is row 37 is somebody else's app.
  */
 function shareHref(name: string, slug: string, rank: number | null, amount: number): string {
-  const place = rank === null ? "is on iosbid.lol" : `is #${rank} on iosbid.lol`;
+  const place = rank === null ? "is on iosrank.lol" : `is #${rank} on iosrank.lol`;
   const text = `${name} ${place} for ${money(amount)}. The row shows its own tap count.`;
-  const url = `https://iosbid.lol/r/${slug}`;
+  const url = `https://iosrank.lol/r/${slug}`;
   return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 }
 
@@ -47,7 +47,7 @@ function Reference({ sessionId }: { sessionId: string }) {
           Reference <b style={{ overflowWrap: "anywhere" }}>{sessionId}</b>.{" "}
         </>
       )}
-      Email hello@iosbid.lol with your card statement line and we will place the rank or refund it.
+      Email hello@iosrank.lol with your card statement line and we will place the rank or refund it.
     </p>
   );
 }
@@ -70,7 +70,7 @@ export const Route = createFileRoute("/success")({
     pageHead({
       // Static, so it cannot claim an outcome the body may contradict: this
       // route also renders the unconfirmed and stuck states.
-      title: "Checkout · iosbid.lol",
+      title: "Checkout · iosrank.lol",
       description: "Where your bid stands.",
       // No canonical: this URL is per payment and belongs in no index.
       noindex: true,

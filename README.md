@@ -1,4 +1,4 @@
-# iosbid.lol
+# iosrank.lol
 
 A public leaderboard for iOS App Store apps where rank is the bid and nothing else.
 

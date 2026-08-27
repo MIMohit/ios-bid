@@ -14,7 +14,7 @@ const HEARTBEAT_MS = 30_000;
  * visible to a board, a rail, a ticker or the stats strip, because at 400 online
  * that is several pushes a second to every connected client, forever.
  *
- * `sid` arrives from the httpOnly `iosbid_sid` cookie by way of a guarded
+ * `sid` arrives from the httpOnly `iosrank_sid` cookie by way of a guarded
  * httpAction, which is why this stays internal. Browser JavaScript cannot read
  * the cookie and cannot call this, so a click farm cannot mint visitors.
  */

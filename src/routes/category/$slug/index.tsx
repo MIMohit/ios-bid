@@ -84,8 +84,8 @@ export const Route = createFileRoute("/category/$slug/")({
     return pageHead({
       title:
         board.page > 1
-          ? `${name}, ranks ${from} to ${to} · iosbid.lol`
-          : `${name} apps ranked by bid · iosbid.lol`,
+          ? `${name}, ranks ${from} to ${to} · iosrank.lol`
+          : `${name} apps ranked by bid · iosrank.lol`,
       description: top
         ? `The ${total} highest paid ${name} apps on the iOS App Store leaderboard. #1 in ${name} is ${top.name} at ${money(top.bid)}, and claiming it costs ${money(top.priceToTake)}.`
         : `No ${name} app has been paid for yet on the iOS App Store leaderboard. ${money(MIN_BID)} takes #1 in ${name}.`,

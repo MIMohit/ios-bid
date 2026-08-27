@@ -12,7 +12,7 @@ export function Footer() {
         <a href="/stats">Live stats</a>
       </nav>
       <span>
-        iosbid.lol · not affiliated with Apple · every app is pulled live from the iTunes Lookup
+        iosrank.lol · not affiliated with Apple · every app is pulled live from the iTunes Lookup
         API
       </span>
     </footer>

@@ -38,11 +38,11 @@ export const Route = createFileRoute("/categories")({
 
     const description =
       leader && leader.topBid > 0
-        ? `All ${ranked.length} iOS App Store categories on iosbid.lol, with the top bid and the number of apps in each. ${CATEGORY_NAME.get(leader.slug) ?? leader.slug} leads at ${money(leader.topBid)}.`
-        : `All ${ranked.length} iOS App Store categories on iosbid.lol, with the top bid and the number of apps in each. Nothing has been paid for yet, so ${money(MIN_BID)} takes #1 in any of them.`;
+        ? `All ${ranked.length} iOS App Store categories on iosrank.lol, with the top bid and the number of apps in each. ${CATEGORY_NAME.get(leader.slug) ?? leader.slug} leads at ${money(leader.topBid)}.`
+        : `All ${ranked.length} iOS App Store categories on iosrank.lol, with the top bid and the number of apps in each. Nothing has been paid for yet, so ${money(MIN_BID)} takes #1 in any of them.`;
 
     return pageHead({
-      title: "Every App Store category · iosbid.lol",
+      title: "Every App Store category · iosrank.lol",
       description,
       canonical: absolute("/categories"),
       jsonld: [

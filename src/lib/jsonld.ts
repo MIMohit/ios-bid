@@ -3,14 +3,14 @@
  * nodes (ItemList, MobileApplication, BreadcrumbList, FAQPage) live in
  * jsonld-board.ts because they need live data.
  */
-const SITE = "https://iosbid.lol";
+const SITE = "https://iosrank.lol";
 
 export const ORGANIZATION = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${SITE}/#organization`,
-  name: "iosbid.lol",
-  alternateName: "iosbid",
+  name: "iosrank.lol",
+  alternateName: "iosrank",
   url: SITE,
   logo: {
     "@type": "ImageObject",
@@ -18,15 +18,15 @@ export const ORGANIZATION = {
     url: `${SITE}/icon-512.png`,
     width: 512,
     height: 512,
-    caption: "iosbid.lol",
+    caption: "iosrank.lol",
   },
   image: { "@id": `${SITE}/#logo` },
   description:
-    "iosbid.lol runs a public leaderboard of iOS App Store apps ranked only by how much was paid for the position. Every listing is a paid placement.",
+    "iosrank.lol runs a public leaderboard of iOS App Store apps ranked only by how much was paid for the position. Every listing is a paid placement.",
   foundingDate: "2026-08",
   slogan: "Rank is the bid.",
   // No `contactPoint` and no `sameAs`. Both were here, asserting
-  // hello@iosbid.lol and https://x.com/iosbidlol on every page, and neither the
+  // hello@iosrank.lol and https://x.com/iosranklol on every page, and neither the
   // mailbox nor the handle has been verified to exist. A support address that
   // bounces is a false claim in markup on a site that takes money with no
   // accounts, and a sameAs pointing at nothing is a dead entity link. Restore
@@ -38,7 +38,7 @@ export const WEBSITE = {
   "@type": "WebSite",
   "@id": `${SITE}/#website`,
   url: SITE,
-  name: "iosbid.lol",
+  name: "iosrank.lol",
   description:
     "A public leaderboard of iOS App Store apps ranked only by what was paid for the spot. Rank is the bid, nothing else.",
   inLanguage: "en-US",

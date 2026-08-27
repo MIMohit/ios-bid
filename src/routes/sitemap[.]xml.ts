@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@convex/_generated/api";
 import { convexServer } from "~/lib/convex-server";
 
-const SITE = "https://iosbid.lol";
+const SITE = "https://iosrank.lol";
 
 /**
  * The URL space, gated on what actually has content.

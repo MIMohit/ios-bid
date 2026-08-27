@@ -7,14 +7,14 @@ import { Squircle } from "~/components/Squircle";
 import { THEME_SCRIPT } from "~/lib/theme";
 import { ORGANIZATION, WEBSITE } from "~/lib/jsonld";
 
-const SITE = "https://iosbid.lol";
+const SITE = "https://iosrank.lol";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "iosbid.lol · the pay-to-rank iOS app leaderboard" },
+      { title: "iosrank.lol · the pay-to-rank iOS app leaderboard" },
       {
         name: "description",
         content:
@@ -24,7 +24,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // theme-color silently replaces the first. Black is the site's identity in
       // both themes, and the light theme's chrome is glass over content anyway.
       { name: "theme-color", content: "#000000" },
-      { property: "og:site_name", content: "iosbid.lol" },
+      { property: "og:site_name", content: "iosrank.lol" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: `${SITE}/opengraph-image` },
       { name: "twitter:card", content: "summary_large_image" },
@@ -52,7 +52,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               src: "https://datafa.st/js/script.js",
               defer: true,
               "data-website-id": import.meta.env.VITE_DATAFAST_ID,
-              "data-domain": "iosbid.lol",
+              "data-domain": "iosrank.lol",
             },
           ]
         : []),

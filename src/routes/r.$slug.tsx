@@ -55,11 +55,11 @@ export const Route = createFileRoute("/r/$slug")({
 
     const { row, clicks } = loaderData;
     const canonical = absolute(`/r/${params.slug}`);
-    const title = `${row.name} is #${row.rank} on iosbid.lol`;
+    const title = `${row.name} is #${row.rank} on iosrank.lol`;
 
     const head = pageHead({
       title,
-      description: `${row.name} holds #${row.rank} on the iosbid.lol iOS app leaderboard with ${money(row.bid)} paid for the spot and ${clicks.toLocaleString("en-US")} taps sent. Taking the rank costs ${money(row.priceToTake)}.`,
+      description: `${row.name} holds #${row.rank} on the iosrank.lol iOS app leaderboard with ${money(row.bid)} paid for the spot and ${clicks.toLocaleString("en-US")} taps sent. Taking the rank costs ${money(row.priceToTake)}.`,
       canonical,
       jsonld: [
         breadcrumbList([
@@ -115,7 +115,7 @@ function Receipt() {
       <main className="page">
         <div className="board-head">
           <h1>
-            {row.name} is #{row.rank} on iosbid.lol
+            {row.name} is #{row.rank} on iosrank.lol
           </h1>
           <p>
             {money(row.bid)} paid · {clicks.toLocaleString("en-US")} taps sent · rank is live

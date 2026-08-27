@@ -132,7 +132,7 @@ export const createCheckout = action({
             // carved out of it. Inclusive would make every settled amount an
             // overstatement of what we were actually paid.
             tax_behavior: "exclusive",
-            product_data: { name: `${snapshot.name} on iosbid.lol`, tax_code: TAX_CODE },
+            product_data: { name: `${snapshot.name} on iosrank.lol`, tax_code: TAX_CODE },
           },
         },
       ],

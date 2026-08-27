@@ -3,7 +3,7 @@ import { trackEdge, utcDay } from "~/lib/convex-server";
 import { readOrIssueSid } from "./sid";
 
 /**
- * Marks this visitor present, and mints `iosbid_sid` on first sight.
+ * Marks this visitor present, and mints `iosrank_sid` on first sight.
  *
  * The hop through Vercel exists because the cookie is httpOnly: the browser
  * cannot call Convex with a value it is not allowed to read, and that is

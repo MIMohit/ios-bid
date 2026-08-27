@@ -122,7 +122,7 @@ export default defineSchema({
 
   /** Rolling presence for the "N online" counter. One row per anonymous sid. */
   presence: defineTable({
-    sid: v.string(),                // the iosbid_sid cookie value
+    sid: v.string(),                // the iosrank_sid cookie value
     lastSeen: v.number(),           // ms epoch, refreshed at most every 30s per visitor
   })
     .index("by_sid", ["sid"])

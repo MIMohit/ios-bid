@@ -81,8 +81,8 @@ export const Route = createFileRoute("/category/$slug/today")({
     return pageHead({
       title:
         board.page > 1
-          ? `${name} today, ranks ${from} to ${to} · iosbid.lol`
-          : `${name} today · iosbid.lol`,
+          ? `${name} today, ranks ${from} to ${to} · iosrank.lol`
+          : `${name} today · iosrank.lol`,
       description: top
         ? `${name} apps ranked by what was spent in the last 24 hours. ${total} apps, led by ${top.name} at ${money(top.bid)}.`
         : `${name} apps ranked by what was spent in the last 24 hours. Nothing has been paid in this window yet, so ${money(MIN_BID)} takes today's #1 in ${name}.`,

@@ -29,7 +29,7 @@ export function Header({ window, hrefFor }: Props) {
             <rect x="7" y="7" width="4" height="10" rx="1.4" fill="currentColor" opacity=".72" />
             <rect x="13" y="2" width="4" height="15" rx="1.4" fill="var(--accent)" />
           </svg>
-          iosbid.lol
+          iosrank.lol
         </a>
 
         {/*

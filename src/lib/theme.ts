@@ -2,7 +2,7 @@
  * The theme contract. The blocking script in __root.tsx and the toggle button
  * both read this key, so it is defined exactly once.
  */
-export const THEME_STORAGE_KEY = "iosbid-theme";
+export const THEME_STORAGE_KEY = "iosrank-theme";
 
 export type Theme = "dark" | "light";
 
