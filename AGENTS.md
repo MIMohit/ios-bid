@@ -35,7 +35,7 @@ contributes nothing to it and it contributes nothing to `vite.config.ts`.
   naming `backdrop-filter` a third time.
 - No `@keyframes` that runs without a user gesture. No spinners, shimmer, pulse or ambient motion.
   The theme switch is the one animation on the site: a View Transitions circular reveal grown from
-  the toggle button, driven by `toggleTheme()` in `src/lib/theme.ts`. It bails to a plain attribute
+  the viewport's top right corner, driven by `toggleTheme()` in `src/lib/theme.ts`. It bails to a plain attribute
   swap under `prefers-reduced-motion` or without `startViewTransition`.
 - Whole US dollars only. Cents exist in exactly one place: Stripe `unit_amount = dollars * 100`.
 - There is no per-listing detail page. The string "see details" must not appear in the codebase.

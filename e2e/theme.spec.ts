@@ -28,67 +28,62 @@ test("the theme is stamped before first paint, so there is no flash", async ({ p
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
-test("the toggle flips the theme, persists it, and reveals it with a circle from its own corner", async ({
-  page,
-}) => {
+test("the reveal is a circle from the top right that covers the whole viewport", async ({ page }) => {
   await gotoWithTheme(page, "/", "dark");
 
-  const result = await page.evaluate(async () => {
-    const button = document.querySelector<HTMLElement>(".theme-btn")!;
-    const rect = button.getBoundingClientRect();
-    button.click();
-    await new Promise((r) => setTimeout(r, 90));
+  const run = await page.evaluate(async () => {
+    const samples: string[] = [];
+    document.querySelector<HTMLElement>(".theme-btn")!.click();
+    const started = performance.now();
+    let ended = 0;
 
-    // The KEYFRAMES, not the live playState. Whether the animation is still
-    // running at some arbitrary sample point is a race with the clock and says
-    // nothing about the product; what it is animating, from where, and how far
-    // is the whole contract.
-    const animation = document.documentElement
-      .getAnimations({ subtree: true })
-      .find(
-        (a) =>
-          (a.effect as KeyframeEffect | undefined)?.pseudoElement ===
-          "::view-transition-new(root)",
-      );
-    const effect = animation?.effect as KeyframeEffect | undefined;
-    const frames = (effect?.getKeyframes() ?? []).map((f) => String(f.clipPath ?? ""));
-    const timing = effect?.getTiming();
-
-    await new Promise((r) => setTimeout(r, 700));
-    return {
-      frames,
-      duration: typeof timing?.duration === "number" ? timing.duration : 0,
-      found: animation !== undefined,
-      origin: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
-      viewport: { w: window.innerWidth, h: window.innerHeight },
-      theme: document.documentElement.getAttribute("data-theme"),
-      stored: localStorage.getItem("iosrank-theme"),
-    };
+    // Sample the RESOLVED clip-path across the transition. What matters is the
+    // behaviour over time, not a value read at one arbitrary instant.
+    for (let i = 0; i < 16; i++) {
+      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => setTimeout(r, 50));
+      const clip = getComputedStyle(document.documentElement, "::view-transition-new(root)").clipPath;
+      if (clip && clip !== "none") samples.push(clip);
+      const live = document.documentElement
+        .getAnimations({ subtree: true })
+        .filter((a) => (a.effect as KeyframeEffect | undefined)?.pseudoElement?.includes("view-transition"));
+      if (live.length === 0 && i > 2) {
+        ended = performance.now() - started;
+        break;
+      }
+    }
+    return { samples, ended, theme: document.documentElement.getAttribute("data-theme") };
   });
 
-  expect(result.theme).toBe("light");
-  expect(result.stored).toBe("light");
-  expect(result.found, "no animation on ::view-transition-new(root)").toBe(true);
-  expect(result.duration, "the reveal is instant or endless").toBeGreaterThan(200);
+  expect(run.theme).toBe("light");
+  expect(run.samples.length, "no reveal was painted at all").toBeGreaterThan(3);
 
-  expect(result.frames.length, `unexpected keyframes: ${result.frames.join(" -> ")}`).toBe(2);
-  const [from, to] = result.frames;
-  expect(from, "the reveal does not start from nothing").toMatch(/^circle\(0px at /);
-  expect(to, "the reveal is not a circle").toMatch(/^circle\(/);
+  const radius = (clip: string) => Number(clip.match(/circle\(([\d.]+)%/)?.[1] ?? NaN);
 
-  // It grows from the button, not from a hardcoded corner, and it reaches the
-  // furthest corner of the viewport so it always clears the screen.
-  const at = to!.match(/at\s+([\d.]+)px\s+([\d.]+)px/);
-  expect(at, `no origin in clip-path: ${to}`).not.toBeNull();
-  expect(Math.abs(Number(at![1]) - result.origin.x)).toBeLessThan(2);
-  expect(Math.abs(Number(at![2]) - result.origin.y)).toBeLessThan(2);
+  // Every frame is a circle anchored at the viewport's top right corner. The
+  // header sits in a centred 1200px column, so anchoring to the toggle's own
+  // rect put the origin near the middle of a wide screen.
+  for (const clip of run.samples) {
+    expect(clip, `reveal is not anchored top right: ${clip}`).toMatch(/at 100% 0(px)?\)$/);
+    expect(radius(clip), `unreadable radius: ${clip}`).not.toBeNaN();
+  }
 
-  const radius = Number(to!.match(/circle\(([\d.]+)px/)![1]);
-  const needed = Math.hypot(
-    Math.max(result.origin.x, result.viewport.w - result.origin.x),
-    Math.max(result.origin.y, result.viewport.h - result.origin.y),
+  // It starts from nothing, grows monotonically, and finishes past the far
+  // corner. A percentage radius resolves against the box diagonal over root 2,
+  // so anything at or above ~142% clears it at every aspect ratio.
+  const radii = run.samples.map(radius);
+  expect(radii[0], "the reveal does not start from nothing").toBeLessThan(20);
+  expect(radii[radii.length - 1], "the reveal stops short of covering the page").toBeGreaterThanOrEqual(
+    142,
   );
-  expect(radius, "the circle stops short of the viewport corner").toBeGreaterThanOrEqual(needed - 1);
+  for (let i = 1; i < radii.length; i++) {
+    expect(radii[i]!, "the reveal went backwards").toBeGreaterThanOrEqual(radii[i - 1]! - 0.01);
+  }
+
+  // It has to survive to the end. Driving the clip from JavaScript after
+  // `ready` raced the group's own shorter animation, so the transition tore
+  // down with the circle part way across and the rest of the page snapped.
+  expect(run.ended, "the transition ended before the wipe did").toBeGreaterThan(400);
 });
 
 test("a rapid double press lands on the right theme and throws nothing", async ({ page }) => {
