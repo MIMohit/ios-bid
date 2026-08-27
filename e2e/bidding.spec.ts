@@ -27,15 +27,15 @@ test.describe("the amount control", () => {
     expect(value, `the amount is not whole dollars: ${value}`).toMatch(NO_DECIMAL);
   });
 
-  test("plus steps in dollars above #1, minus trims to the cheapest #1", async ({ page }) => {
+  test("the steppers step in dollars and stop on a rung, never cross one", async ({ page }) => {
     await gotoWithTheme(page, "/", "dark");
     const amount = page.locator(".hero-amount");
     const label = page.locator(".hero-label");
     const dollars = async () => Number((await amount.inputValue()).replace(/[^\d]/g, ""));
 
-    // The bar opens on the rounded price of #1. Nothing outranks #1, so there is
-    // no rung above it and plus falls back to the dollar step, which scales
-    // because +$1 on a $17,000 bid is a control that does nothing.
+    // The bar opens on the rounded price of #1. Nothing outranks #1, so plus has
+    // no rung to stop on and takes the whole step, which scales because +$1 on a
+    // $17,000 bid is a control that does nothing.
     await expect(label).toContainText("#1");
     const before = await dollars();
     await page.locator(".step").nth(1).click();
@@ -45,14 +45,21 @@ test.describe("the amount control", () => {
     else if (before >= 100) expect(step).toBe(5);
     else expect(step).toBe(1);
 
-    // Minus walks the board's own ladder instead: a rounded $17,005 lands on the
-    // $17,001 that still holds the spot, so it never overshoots the price it
-    // started from and never leaves #1 in one press.
+    // And back down by the same step, because the opening price is never under
+    // the rung beneath it.
     await page.locator(".step").nth(0).click();
-    const trimmed = await dollars();
-    expect(trimmed, "minus overshot the price it opened at").toBeLessThanOrEqual(before);
-    expect(trimmed).toBeGreaterThanOrEqual(MIN_BID);
-    await expect(label).toContainText("#1");
+    expect(await dollars()).toBe(before);
+
+    // A rung cuts a step short and never lengthens one. Trimming $17,005 to the
+    // $17,001 that still holds #1 is a rung stopping a $100 step. Dropping $5 to
+    // $1 on an empty board would be a rung making a $1 step longer, which is the
+    // regression this pins.
+    await page.locator(".step").nth(0).click();
+    const down = await dollars();
+    expect(down, "minus moved further than one step").toBeGreaterThanOrEqual(
+      Math.max(MIN_BID, before - step),
+    );
+    expect(down).toBeLessThan(before);
   });
 
   test("a decimal point cannot be entered at all", async ({ page }) => {
