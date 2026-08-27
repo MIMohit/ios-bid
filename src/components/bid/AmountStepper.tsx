@@ -6,8 +6,7 @@ import { money } from "~/lib/format";
 
 /**
  * The step grows with the amount, because +$1 on a $17,000 bid is a control
- * that does nothing. It is the fallback: wherever the board offers a rung, the
- * stepper lands on that instead.
+ * that does nothing. A rung can cut a step short but never lengthens one.
  */
 function stepFor(amount: number): number {
   if (amount >= 10_000) return 100;
@@ -57,25 +56,31 @@ export function AmountStepper({ value, ladder, onChange }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
 
   /**
-   * The steppers walk the board's own ladder, because that is the only place a
-   * dollar changes anything: minus trims a #1 price of $17,005 to the $17,001
-   * that still holds #1, then drops to the cheapest amount that holds #2. Where
-   * the board has no rung to offer, above #1 or past the depth it will name, it
-   * falls back to a plain dollar step.
+   * A dollar step that stops on a rung rather than crossing it. The rungs are
+   * the only prices where a dollar changes anything, so minus trims a #1 price
+   * of $17,005 to the $17,001 that still holds #1 instead of overshooting to
+   * $16,905, and plus stops on the cheapest amount that takes the place above
+   * instead of sailing over it.
+   *
+   * It stops on a rung, it does not jump to one. Anywhere the step lands short
+   * of the rung it is the plain step, which is what keeps $5 on an empty board
+   * walking down $4, $3, $2, $1 rather than falling straight to the floor.
    */
-  const rung = (direction: -1 | 1) => {
-    if (direction === 1) return ladder?.dearer;
-    if (ladder?.floor != null && value > ladder.floor) return ladder.floor;
-    return ladder?.cheaper;
+  const step = (direction: -1 | 1) => {
+    const next = value + direction * stepFor(value);
+    // Going up, the rung is the cheapest amount that takes the place above.
+    // Going down it is the cheapest amount that still holds this one, or, once
+    // the amount is already on that, the cheapest that holds the next place down.
+    const rung =
+      direction === 1
+        ? ladder?.dearer
+        : ladder?.floor != null && value > ladder.floor
+          ? ladder.floor
+          : ladder?.cheaper;
+    const stopped =
+      rung == null ? next : direction === 1 ? Math.min(next, rung) : Math.max(next, rung);
+    onChange(Math.min(MAX_BID, Math.max(MIN_BID, stopped)));
   };
-
-  const step = (direction: -1 | 1) =>
-    onChange(
-      Math.min(
-        MAX_BID,
-        Math.max(MIN_BID, rung(direction) ?? value + direction * stepFor(value)),
-      ),
-    );
 
   return (
     <div className="stepper">
