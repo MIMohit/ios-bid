@@ -19,9 +19,9 @@ export const Route = createFileRoute("/privacy")({
 
   head: () =>
     pageHead({
-      title: "Privacy · iosbid.lol",
+      title: "Privacy · iosrank.lol",
       description:
-        "What iosbid.lol collects. No accounts, no third-party cookies, no IP addresses stored. One first-party session cookie and cookieless visitor analytics.",
+        "What iosrank.lol collects. No accounts, no third-party cookies, no IP addresses stored. One first-party session cookie and cookieless visitor analytics.",
       canonical: absolute("/privacy"),
       jsonld: [
         breadcrumbList([
@@ -56,7 +56,7 @@ function Privacy() {
           <section>
             <h2>The one cookie</h2>
             <p>
-              We set a single first-party cookie named <code>iosbid_sid</code>. It holds a random
+              We set a single first-party cookie named <code>iosrank_sid</code>. It holds a random
               identifier, nothing else. It is httpOnly, so page JavaScript cannot read it, it is
               scoped to this site, and it expires after a year.
             </p>
@@ -120,7 +120,7 @@ function Privacy() {
           <section>
             <h2>Contact</h2>
             <p>
-              Questions, or a request to remove something, go to hello@iosbid.lol. Clearing your
+              Questions, or a request to remove something, go to hello@iosrank.lol. Clearing your
               browser cookies for this site removes the only identifier we hold.
             </p>
           </section>

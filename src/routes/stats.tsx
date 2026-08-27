@@ -35,8 +35,8 @@ export const Route = createFileRoute("/stats")({
 
     const { online, revenue, listingCount, taps } = loaderData;
     return pageHead({
-      title: "Live stats · iosbid.lol",
-      description: `Live numbers for iosbid.lol: ${listingCount.toLocaleString("en-US")} apps on the board, ${money(revenue)} paid, ${taps.toLocaleString("en-US")} taps sent to the App Store in the last ${DAYS} days, ${online.toLocaleString("en-US")} people here right now.`,
+      title: "Live stats · iosrank.lol",
+      description: `Live numbers for iosrank.lol: ${listingCount.toLocaleString("en-US")} apps on the board, ${money(revenue)} paid, ${taps.toLocaleString("en-US")} taps sent to the App Store in the last ${DAYS} days, ${online.toLocaleString("en-US")} people here right now.`,
       canonical: absolute("/stats"),
       jsonld: [
         breadcrumbList([

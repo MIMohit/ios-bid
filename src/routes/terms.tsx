@@ -21,9 +21,9 @@ export const Route = createFileRoute("/terms")({
 
   head: () =>
     pageHead({
-      title: "Terms · iosbid.lol",
+      title: "Terms · iosrank.lol",
       description:
-        "Terms of service for iosbid.lol. Payments are final, listings are paid placements, and we are not affiliated with Apple Inc.",
+        "Terms of service for iosrank.lol. Payments are final, listings are paid placements, and we are not affiliated with Apple Inc.",
       canonical: absolute("/terms"),
       jsonld: [
         breadcrumbList([
@@ -48,7 +48,7 @@ function Terms() {
       <main className="page">
         <div className="board-head">
           <h1>Terms</h1>
-          <p>Last updated August 2026. Using iosbid.lol means you accept what is below.</p>
+          <p>Last updated August 2026. Using iosrank.lol means you accept what is below.</p>
         </div>
 
         <div className="doc">
@@ -120,7 +120,7 @@ function Terms() {
           <section>
             <h2>Apple</h2>
             <p>
-              iosbid.lol is not affiliated with, endorsed by, or sponsored by Apple Inc. App Store
+              iosrank.lol is not affiliated with, endorsed by, or sponsored by Apple Inc. App Store
               is a trademark of Apple Inc. App metadata is retrieved from Apple's publicly available
               lookup API and belongs to Apple and to the developers who published it. Nothing on
               this board reflects Apple's own App Store rankings or its editorial choices.
@@ -143,7 +143,7 @@ function Terms() {
 
           <section>
             <h2>Contact</h2>
-            <p>hello@iosbid.lol.</p>
+            <p>hello@iosrank.lol.</p>
           </section>
 
           <p>

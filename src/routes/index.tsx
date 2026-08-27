@@ -84,8 +84,8 @@ export const Route = createFileRoute("/")({
 
     if (board.page > 1) {
       return pageHead({
-        title: `iOS apps ranked ${from} to ${to} by bid · iosbid.lol`,
-        description: `Ranks ${from} to ${to} of ${total} iOS apps on iosbid.lol, ordered by total paid. Claiming rank ${from} costs ${money(top?.priceToTake ?? MIN_BID)}.`,
+        title: `iOS apps ranked ${from} to ${to} by bid · iosrank.lol`,
+        description: `Ranks ${from} to ${to} of ${total} iOS apps on iosrank.lol, ordered by total paid. Claiming rank ${from} costs ${money(top?.priceToTake ?? MIN_BID)}.`,
         canonical,
         jsonld: [
           boardItemList(board.rows, {
@@ -101,7 +101,7 @@ export const Route = createFileRoute("/")({
     }
 
     return pageHead({
-      title: "iosbid.lol · the pay-to-rank iOS app leaderboard",
+      title: "iosrank.lol · the pay-to-rank iOS app leaderboard",
       description: top
         ? `${total} iOS App Store apps ranked only by what was paid for the spot. #1 is ${top.name} at ${money(top.bid)}. Taking #1 costs ${money(board.priceForTop)}. Every listing is a paid placement.`
         : `iOS App Store apps ranked only by what was paid for the spot. Nobody has bid yet, so ${money(MIN_BID)} takes #1. Every listing is a paid placement.`,

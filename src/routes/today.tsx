@@ -79,8 +79,8 @@ export const Route = createFileRoute("/today")({
     return pageHead({
       title:
         board.page > 1
-          ? `Today, ranks ${from} to ${to} · iosbid.lol`
-          : "Today's top iOS apps by bid · iosbid.lol",
+          ? `Today, ranks ${from} to ${to} · iosrank.lol`
+          : "Today's top iOS apps by bid · iosrank.lol",
       description,
       canonical,
       // A rolling window with nothing in it is thin content, and there are 27

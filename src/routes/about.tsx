@@ -36,11 +36,11 @@ export const Route = createFileRoute("/about")({
 
     const { visitors, revenue, topBid } = loaderData;
     return pageHead({
-      title: "About · iosbid.lol",
+      title: "About · iosrank.lol",
       description:
         topBid > 0
-          ? `Who runs iosbid.lol and what happened after launch. ${visitors.toLocaleString("en-US")} visitors, ${money(revenue)} paid, and a highest bid of ${money(topBid)}.`
-          : `Who runs iosbid.lol and why an App Store leaderboard is priced in whole dollars. Nobody has taken #1 yet, so ${money(MIN_BID)} claims it.`,
+          ? `Who runs iosrank.lol and what happened after launch. ${visitors.toLocaleString("en-US")} visitors, ${money(revenue)} paid, and a highest bid of ${money(topBid)}.`
+          : `Who runs iosrank.lol and why an App Store leaderboard is priced in whole dollars. Nobody has taken #1 yet, so ${money(MIN_BID)} claims it.`,
       canonical: absolute("/about"),
       jsonld: [
         breadcrumbList([
@@ -132,7 +132,7 @@ function About() {
             <h2>Who runs it</h2>
             <p>
               One developer, as a side project. It is not affiliated with Apple Inc., and Apple has
-              no involvement in what appears here. Reach us at hello@iosbid.lol.
+              no involvement in what appears here. Reach us at hello@iosrank.lol.
             </p>
           </section>
         </div>

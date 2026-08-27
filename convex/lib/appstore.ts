@@ -68,7 +68,7 @@ async function resolveRedirect(input: string): Promise<string> {
     const res = await fetch(raw, {
       method: "GET",
       redirect: "follow",
-      headers: { "user-agent": "Mozilla/5.0 (compatible; iosbid/1.0)" },
+      headers: { "user-agent": "Mozilla/5.0 (compatible; iosrank/1.0)" },
       signal: AbortSignal.timeout(6000),
     });
     return res.url || raw;
@@ -178,7 +178,7 @@ export async function lookupApp(appId: string): Promise<AppMeta> {
   // "software" is an iOS app; "mac-software" is Mac-only. This board is iOS only.
   const kind = str(hit.kind);
   if (kind && kind !== "software") {
-    throw new AppStoreError("That is not an iOS app. iosbid only lists apps from the iOS App Store.");
+    throw new AppStoreError("That is not an iOS app. iosrank only lists apps from the iOS App Store.");
   }
   const devices = Array.isArray(hit.supportedDevices) ? hit.supportedDevices : [];
   if (devices.length > 0 && !devices.some((d) => /^(iPhone|iPad|iPod)/i.test(String(d)))) {

@@ -72,7 +72,7 @@ const FAQ = [
   },
   {
     q: "Is this an editorial ranking of the best apps?",
-    a: "No. Every listing is a paid placement. The board says what was paid, and that is the only thing it says. iosbid.lol is not affiliated with Apple Inc.",
+    a: "No. Every listing is a paid placement. The board says what was paid, and that is the only thing it says. iosrank.lol is not affiliated with Apple Inc.",
   },
 ] as const;
 
@@ -88,8 +88,8 @@ export const Route = createFileRoute("/rules")({
   // same whether or not the loader has resolved.
   head: () =>
     pageHead({
-      title: "Rules · iosbid.lol",
-      description: `How ranking works on iosbid.lol. Whole dollars, ${money(MIN_BID)} minimum, #1 costs top bid plus ${money(TOP_STEP)}, any other rank costs that rank plus ${money(RAISE_STEP)}. Paying less is never an error.`,
+      title: "Rules · iosrank.lol",
+      description: `How ranking works on iosrank.lol. Whole dollars, ${money(MIN_BID)} minimum, #1 costs top bid plus ${money(TOP_STEP)}, any other rank costs that rank plus ${money(RAISE_STEP)}. Paying less is never an error.`,
       canonical: absolute("/rules"),
       jsonld: [
         faqPage(FAQ),
@@ -116,7 +116,7 @@ function Rules() {
         <div className="board-head">
           <h1>Rules</h1>
           <p>
-            iosbid.lol is a public leaderboard of iOS App Store apps. No ads, no API keys, no
+            iosrank.lol is a public leaderboard of iOS App Store apps. No ads, no API keys, no
             revenue share. You pay to stand above everyone else. Rank is the bid, nothing else.
           </p>
         </div>

@@ -88,7 +88,7 @@ export const Route = createFileRoute("/opengraph-image")({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   <Mark />
-                  <div style={{ display: "flex", fontSize: 34, letterSpacing: "-0.022em" }}>iosbid.lol</div>
+                  <div style={{ display: "flex", fontSize: 34, letterSpacing: "-0.022em" }}>iosrank.lol</div>
                 </div>
                 <div style={{ display: "flex", fontSize: 22, color: LABEL_3 }}>Rank is the bid.</div>
               </div>

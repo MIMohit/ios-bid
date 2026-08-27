@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-deploy SEO smoke test. Usage: scripts/check-seo.sh https://iosbid.lol
+# Post-deploy SEO smoke test. Usage: scripts/check-seo.sh https://iosrank.lol
 #
 # Every count uses `grep -o | wc -l`, never `grep -c`. The SSR payload is one
 # enormous line, so `grep -c` returns 1 for a board with 100 rows and 1 for a
@@ -59,7 +59,7 @@ check "robots.txt: Sitemap line"    "$(count "$robots" '^Sitemap: ')" 1 ge
 
 sitemap=$(fetch "$BASE/sitemap.xml")
 check "sitemap.xml: <urlset>" "$(count "$sitemap" '<urlset')" 1 ge
-check "sitemap.xml: homepage" "$(count "$sitemap" '<loc>[^<]*iosbid.lol/</loc>')" 1 ge
+check "sitemap.xml: homepage" "$(count "$sitemap" '<loc>[^<]*iosrank.lol/</loc>')" 1 ge
 
 # Every og:image on the site points here. It was a hard 500 for hours and no
 # check saw it, because a 500 still returns a body and every count still passed.
@@ -74,7 +74,7 @@ if [ -z "$receipt" ]; then
   skip "no receipts in the sitemap yet, /r/ checks not run"
 else
   r=$(fetch "$BASE/r/$receipt")
-  check "/r/$receipt: title names the rank"  "$(count "$r" '<title>[^<]*is #[0-9]* on iosbid.lol</title>')" 1
+  check "/r/$receipt: title names the rank"  "$(count "$r" '<title>[^<]*is #[0-9]* on iosrank.lol</title>')" 1
   check "/r/$receipt: canonical"             "$(count "$r" "rel=\"canonical\" href=\"[^\"]*/r/$receipt\"")" 1
   check "/r/$receipt: its own og:image"      "$(count "$r" "og:image\" content=\"[^\"]*/og/$receipt\"")" 1
   check "/r/$receipt: one h1"                "$(count "$r" '<h1')" 1

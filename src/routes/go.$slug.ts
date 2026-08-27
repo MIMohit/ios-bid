@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { boardDestination, convexServer, trackEdge, utcDay } from "~/lib/convex-server";
 import { readSid } from "~/server/sid";
 
-const SITE = "https://iosbid.lol";
+const SITE = "https://iosrank.lol";
 
 /** Declared bots that do carry cookies, plus preview fetchers and scripted clients. */
 const BOT =
@@ -19,7 +19,7 @@ const HEADERS: Record<string, string> = {
 /** OWNER-DECISIONS section 7. The stored url is parameter free, but not assumed to be. */
 function destination(url: string): string {
   const u = new URL(url);
-  u.searchParams.set("utm_source", "iosbid");
+  u.searchParams.set("utm_source", "iosrank");
   return u.toString();
 }
 

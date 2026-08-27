@@ -65,7 +65,7 @@ function authorized(request: Request): boolean {
   const secret = process.env.EDGE_SECRET;
   // Timing-safe compare needs node:crypto, which the httpAction V8 runtime does
   // not have. A random secret over TLS is not a practical timing target.
-  return !!secret && request.headers.get("x-iosbid-edge") === secret;
+  return !!secret && request.headers.get("x-iosrank-edge") === secret;
 }
 
 /** Shared shape of both track bodies. Anything else is a 400 and no Convex write. */

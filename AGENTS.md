@@ -1,4 +1,4 @@
-# iosbid.lol
+# iosrank.lol
 
 A pay-to-rank public leaderboard of iOS App Store apps. Rank is the bid, nothing else.
 
@@ -48,7 +48,7 @@ Use `npx convex dev --once`.
 
 ## Convex deployments
 
-The project is `iosbid` on team `mimohit77`. Development runs against a **cloud** dev deployment, not
+The Convex project is `iosbid` on team `mimohit77` (named before the site was renamed to iosrank.lol). Development runs against a **cloud** dev deployment, not
 a local one, because a local deployment has no public URL and Stripe could not deliver a webhook to
 it. The whole payment path is untestable locally.
 
@@ -82,7 +82,7 @@ These live on the deployment, not in any file. Set them with `npx convex env set
 |---|---|
 | `STRIPE_SECRET_KEY` | Checkout session creation. `sk_test_...` until launch |
 | `STRIPE_WEBHOOK_SECRET` | Webhook signature verification |
-| `SITE_ORIGIN` | `https://iosbid.lol`, used to build Stripe success and cancel URLs |
+| `SITE_ORIGIN` | `https://iosrank.lol`, used to build Stripe success and cancel URLs |
 | `EDGE_SECRET` | Guards the two write `httpAction` endpoints. Same value as the Vercel one |
 
 Convex injects `CONVEX_CLOUD_URL` and `CONVEX_SITE_URL` into the function runtime itself. Do not
@@ -125,7 +125,7 @@ build writes it, and setting it manually is how a preview ends up writing to pro
 
 Two themes, one variable set, defined in `src/styles/tokens.css` under `:root[data-theme="dark"]`
 and `:root[data-theme="light"]`. A blocking inline script in `src/routes/__root.tsx` resolves
-`localStorage("iosbid-theme")` then `prefers-color-scheme` and stamps `data-theme` on `<html>`
+`localStorage("iosrank-theme")` then `prefers-color-scheme` and stamps `data-theme` on `<html>`
 before first paint, so there is no flash. The storage key and the script both live in
 `src/lib/theme.ts`; import `THEME_STORAGE_KEY` from there rather than retyping it.
 

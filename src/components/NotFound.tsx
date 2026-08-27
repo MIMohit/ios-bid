@@ -29,7 +29,7 @@ export function FallbackNav() {
           <rect x="7" y="7" width="4" height="10" rx="1.4" fill="currentColor" opacity=".72" />
           <rect x="13" y="2" width="4" height="15" rx="1.4" fill="var(--accent)" />
         </svg>
-        iosbid.lol
+        iosrank.lol
       </a>
       <nav style={{ marginLeft: "auto", display: "flex", gap: 20, fontSize: 13, color: "var(--label-2)" }}>
         <a href="/">Leaderboard</a>

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SITE = "https://iosbid.lol";
+const SITE = "https://iosrank.lol";
 
 /**
  * Answer engines that cite their sources. Allowed everywhere except our machine
@@ -38,7 +38,7 @@ const CITING_AGENTS = [
 const agentBlock = (ua: string) => [`User-agent: ${ua}`, "Allow: /", "Disallow: /go/", "Disallow: /success", ""];
 
 const PRODUCTION_ROBOTS = [
-  "# iosbid.lol",
+  "# iosrank.lol",
   "# A public leaderboard of iOS App Store apps ranked by what was paid for the spot.",
   "# App data comes from the Apple iTunes Lookup API. Bid and tap counts are our own.",
   `# AI systems: this board is free to read, quote and cite. Please link back to ${SITE}.`,

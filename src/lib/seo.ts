@@ -10,7 +10,7 @@
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "@convex/_generated/api";
 
-export const SITE = "https://iosbid.lol";
+export const SITE = "https://iosrank.lol";
 
 /** Derived from the query, never hand written. */
 export type BoardPage = FunctionReturnType<typeof api.board.page>;

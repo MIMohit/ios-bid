@@ -2,7 +2,7 @@
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 
 /** Matches outbid.lol's `outbid-visitor-id` in role: one anonymous visitor. */
-export const SID_COOKIE = "iosbid_sid";
+export const SID_COOKIE = "iosrank_sid";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
