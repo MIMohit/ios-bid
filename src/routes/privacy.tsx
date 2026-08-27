@@ -110,7 +110,7 @@ function Privacy() {
           <section>
             <h2>Analytics</h2>
             <p>
-              Traffic analytics come from datafa.st, which is cookieless and does not track people
+              Traffic analytics come from PostHog, configured without cookies or local storage so it cannot follow anyone
               across sites. The counts on this site's own <a href="/stats">stats page</a> come from
               our own database and are aggregate totals: taps, page views, revenue and how many
               apps are on the board. There is no per-person record behind them.

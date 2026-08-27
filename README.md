@@ -65,7 +65,7 @@ Every page has a generated share card:
 - **Convex** as backend and database. Queries, mutations, Node actions, crons, and the Stripe
   webhook as an HTTP action. Reactivity comes from here.
 - **Stripe Checkout** for payment. Anonymous, no accounts, settled in the webhook.
-- **datafa.st** for visitor analytics, with a public dashboard.
+- **PostHog** for traffic analytics, loaded as the async snippet so it stays out of the entry bundle.
 
 There is no authentication anywhere, and no per-listing detail page. `/r/:slug` is a receipt, a
 share target for someone who paid, and nothing on the board links to it.

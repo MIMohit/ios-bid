@@ -6,6 +6,7 @@ import appCss from "~/styles/app.css?url";
 import { Squircle } from "~/components/Squircle";
 import { THEME_SCRIPT } from "~/lib/theme";
 import { ORGANIZATION, WEBSITE } from "~/lib/jsonld";
+import { posthogSnippet } from "~/lib/analytics";
 
 const SITE = "https://iosrank.lol";
 
@@ -43,18 +44,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       { type: "application/ld+json", children: JSON.stringify(ORGANIZATION) },
       { type: "application/ld+json", children: JSON.stringify(WEBSITE) },
-      // Cookieless first-party analytics. import.meta.env, not process.env:
-      // head() runs on both server and client and only import.meta.env is
-      // statically replaced in the client bundle.
-      ...(import.meta.env.VITE_DATAFAST_ID
-        ? [
-            {
-              src: "https://datafa.st/js/script.js",
-              defer: true,
-              "data-website-id": import.meta.env.VITE_DATAFAST_ID,
-              "data-domain": "iosrank.lol",
-            },
-          ]
+      // Traffic analytics. import.meta.env, not process.env: head() runs on both
+      // server and client, and only import.meta.env is statically replaced in
+      // the client bundle.
+      //
+      // Loaded as PostHog's async snippet rather than the npm package on
+      // purpose. Bundling posthog-js adds 50KB or more to the entry chunk on a
+      // page whose LCP is hero text competing with fifty Apple CDN images. The
+      // snippet fetches it off PostHog's CDN after first paint instead, so a
+      // slow or blocked analytics host cannot delay the board.
+      ...(import.meta.env.VITE_POSTHOG_KEY
+        ? [{ children: posthogSnippet(), suppressHydrationWarning: true }]
         : []),
     ],
   }),

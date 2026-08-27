@@ -111,7 +111,7 @@ to deploy means no frontend is built, so **adding** a Convex function is safe an
 deleting** one is not. Add, migrate, delete in a later deploy.
 
 Vercel environment variables: `CONVEX_DEPLOY_KEY` (a separate key for production and for preview),
-`EDGE_SECRET`, and `VITE_DATAFAST_ID` on production only. Never set `VITE_CONVEX_URL` by hand; the
+`EDGE_SECRET`, and `VITE_POSTHOG_KEY` (and optionally `VITE_POSTHOG_HOST`) on production only. Never set `VITE_CONVEX_URL` by hand; the
 build writes it, and setting it manually is how a preview ends up writing to production data.
 
 ## Known quirks
