@@ -27,13 +27,17 @@ check() {
 
 fetch() { curl -fsSL --compressed -A "check-seo" "$1"; }
 head_of() { curl -sSI -A "check-seo" "$1"; }
-count() { printf '%s' "$1" | grep -oi -- "$2" | wc -l | tr -d ' '; }
+# `|| true` is load bearing. grep exits 1 when it matches nothing, pipefail
+# propagates that, and `set -e` then kills the script mid-run at the first
+# zero-count assignment. On an empty board that silently skipped robots, the
+# sitemap, /go/ and the OG image, and still exited 0. A checker that stops
+# early and reports success is worse than no checker.
+count() { printf '%s' "$1" | { grep -oi -- "$2" || true; } | wc -l | tr -d ' '; }
 skip() { echo "SKIP  $1"; }
 
 home=$(fetch "$BASE/")
 check "homepage: ld+json blocks"              "$(count "$home" 'application/ld+json')" 3
 check "homepage: canonical link"              "$(count "$home" 'rel="canonical"')" 1 ge
-check "homepage: sponsored nofollow noopener" "$(count "$home" 'rel="sponsored nofollow noopener"')" 1 ge
 check "homepage: no \"see details\""           "$(count "$home" 'see details')" 0
 # A board row's only outbound link is /go/:slug and its only internal link is its
 # category. /r/:slug is a receipt for the buyer, never a row affordance.
@@ -46,6 +50,9 @@ rows=$(count "$home" 'class="m-cat')
 if [ "$rows" -eq 0 ]; then
   skip "board is empty, row checks not run"
 else
+  # The rel policy. Paid placement must not pass PageRank, so this is the one
+  # row assertion that is a compliance check rather than a rendering check.
+  check "homepage: sponsored nofollow noopener" "$(count "$home" 'rel="sponsored nofollow noopener"')" "$rows" ge
   check "homepage: outbound /go/ row links"   "$(count "$home" 'href="/go/')" "$rows" ge
   # The destination, visible on every row. Nothing else on the site says which
   # store it ranks, and the day somebody simplifies it away this goes red.
@@ -69,7 +76,9 @@ check "/opengraph-image: content-type image/png" "$(count "$ogimage" '^content-t
 # /r/:slug, the receipt. Its slug comes from the sitemap, so this checks the two
 # together: a receipt that is not in the sitemap is not tested and that is the
 # correct failure to notice.
-receipt=$(printf '%s' "$sitemap" | grep -o '<loc>[^<]*/r/[^<]*</loc>' | head -1 | sed 's|.*/r/||; s|</loc>||')
+# Same `|| true` as in count(): no receipts in the sitemap is the normal state
+# on an empty board, and without it grep's exit 1 ends the run right here.
+receipt=$(printf '%s' "$sitemap" | { grep -o '<loc>[^<]*/r/[^<]*</loc>' || true; } | head -1 | sed 's|.*/r/||; s|</loc>||')
 if [ -z "$receipt" ]; then
   skip "no receipts in the sitemap yet, /r/ checks not run"
 else
@@ -88,7 +97,7 @@ else
 fi
 
 # Any slug works: an unknown one still 302s, and still carries the header.
-gohdrs=$(curl -fsSI -A "check-seo" "$BASE/go/check-seo-probe")
+gohdrs=$(curl -sSI -A "check-seo" "$BASE/go/check-seo-probe" || true)
 check "/go/: x-robots-tag noindex" "$(count "$gohdrs" '^x-robots-tag:.*noindex')" 1 ge
 
 echo
